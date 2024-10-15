@@ -1,0 +1,37 @@
+.custom-navbar-color {
+    background-color: #ffffff;
+    height: 5rem;
+}
+
+.boton-seleccionado {
+    background-color: #1ba5a5 !important;
+}
+
+.lineaCeleste {
+    background-color: #1ecccc;
+    height: 0.3rem;
+}
+
+.colorTexto {
+    color: #1ecccc;
+    padding-top: 0rem;
+    margin-right: var(--bs-navbar-brand-margin-end);
+    font-size: var(--bs-navbar-brand-font-size);
+    text-decoration: none;
+}
+
+.colorTextoGris {
+    color: #a5a4a6;
+    padding-top: 0rem;
+    margin-right: var(--bs-navbar-brand-margin-end);
+    font-size: var(--bs-navbar-brand-font-size);
+    text-decoration: none;
+}
+
+.iconoperfil {
+    height: 4rem;
+    width: 4rem;
+    border-radius: 50%;
+    margin-right: 1rem;
+    background-color: #d9d9d9;
+}

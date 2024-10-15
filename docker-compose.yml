@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  django:
+    build:
+      context: ./DjangoApi
+      dockerfile: dockerfile
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      - mariadb
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+
+
+  front:
+    build:
+      context: ./Reactfront
+      dockerfile: dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+
+  mariadb:
+    image: mariadb:11.2
+    ports:
+      - "3307:3306"
+    restart: unless-stopped
+    volumes:
+      - ./DjangoApi/database:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+ 
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - mariadb
+
+

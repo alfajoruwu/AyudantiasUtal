@@ -1,0 +1,67 @@
+.fondologin {
+  background-color: #1ecccc;
+  padding: 3rem;
+  border-radius: 10%;
+}
+
+.App {
+  background-color: white;
+}
+
+.Auth-form-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 8rem;
+  box-sizing: border-box;
+}
+
+.Auth-form {
+  width: 420px;
+  box-shadow: rgb(0 0 0 / 16%) 1px 1px 10px;
+  padding-top: 30px;
+  padding-bottom: 20px;
+  border-radius: 8px;
+  background-color: white;
+}
+
+.Auth-form-content {
+  padding-left: 12%;
+  padding-right: 12%;
+}
+
+.Auth-form-title {
+  text-align: center;
+  margin-bottom: 1em;
+  font-size: 24px;
+  color: rgb(34, 34, 34);
+  font-weight: 800;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgb(34, 34, 34);
+}
+
+.btn-ingresar, .btn-registrarse {
+  background-color: #1ecccc;
+  border-color: #1ecccc;
+  color: white;
+}
+
+.btn-ingresar:hover, .btn-registrarse:hover {
+  background-color: #17b3b3;
+  border-color: #17b3b3;
+}
+
+.link-custom {
+  color: #1ecccc;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.link-custom:hover {
+  color: #17b3b3;
+  text-decoration: underline;
+}

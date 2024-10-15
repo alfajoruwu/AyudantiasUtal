@@ -1,0 +1,60 @@
+/* Estilos para las cajas de texto personalizadas */
+.custom-input {
+  width: 200px; 
+  height: 30px; 
+  margin-right: 50px;
+}
+
+/* Estilos adicionales específicos para las cajas de texto personalizadas */
+.custom-input {
+  margin-top: 20px;
+}
+
+/* Estilos para los botones de color */
+.color-btn {
+  margin-top: 8px;
+}
+
+.btn-margin {
+margin-right: 40px; 
+}
+
+.input-margin {
+margin-right: 80px; 
+}
+
+/* Estilos para los dropdowns personalizados */
+.custom-dropdown .btn {
+  background-color: #1ECCCC;
+  color: white;
+  border-color: #1ECCCC; 
+}
+
+/* Estilos para el menú desplegable */
+.custom-dropdown .dropdown-menu {
+  background-color: #1ECCCC;
+}
+
+/* Estilos para los items del menú desplegable */
+.custom-dropdown .dropdown-item {
+  color: white;
+}
+
+/* Estilos para los items del menú desplegable al pasar el mouse o estar enfocado */
+.custom-dropdown .dropdown-item:hover,
+.custom-dropdown .dropdown-item:focus {
+  background-color: #17a2b8;
+}
+
+/* Estilos adicionales específicos para las cajas de texto personalizadas dentro de los dropdowns */
+.custom-dropdown .custom-input {
+  width: 80px; 
+  height: 50px;
+  margin-top: 7px;
+}
+
+.custom-input-small {
+width: 80px;
+height: 55px;
+margin-top: 6px;
+}

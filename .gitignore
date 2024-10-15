@@ -1,0 +1,18 @@
+/Reactfront/node_modules
+.vscode
+/Reactfront/dist/
+/Reactfront/package-lock.json
+
+### Django ###
+/DjangoApi/venv/
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media
+database/
+/DjangoApi/staticfiles
+.env

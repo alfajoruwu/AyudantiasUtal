@@ -1,0 +1,11 @@
+.btn-custom {
+    background-color: #1ecccc; /* Cambia este color al deseado */
+    color: #ffffff; /* Color del texto */
+    border-color: #1ecccc; /* Color del borde */
+  }
+  
+  .btn-custom:hover {
+    background-color: #17a4a4; /* Cambia el color al hover si lo deseas */
+    border-color: #17a4a4;
+  }
+  

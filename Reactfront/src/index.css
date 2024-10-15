@@ -1,0 +1,43 @@
+.color-btn {
+    background-color: #1ecccc;
+    color: white;
+    margin: 0.5rem !important;
+    width: 9.5rem; /* Ancho del botón */
+    height: 3rem;
+    font-size: 1rem;
+    padding: 0.3rem !important;
+
+}
+
+.Componente {
+    background-color: #ffffff;
+    border-radius: 1%;
+    padding-top: 1rem !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
+    padding-bottom: 2rem !important;
+}
+
+.principal {
+    min-height: 100vh;
+    background-color: #f9f9f9;
+}
+
+.color:hover {
+    background-color: #1ba5a5;
+    color: white;
+}
+
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+        "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+        "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+        monospace;
+}

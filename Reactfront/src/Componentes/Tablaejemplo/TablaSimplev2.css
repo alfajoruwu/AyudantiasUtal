@@ -1,0 +1,77 @@
+.custom-table {
+  border-collapse: collapse;
+}
+
+.custom-table th, .custom-table td {
+  border: none;
+  padding: 0.3rem;
+}
+
+.custom-table th {
+  color: #1ECCCC ;
+  font-weight: bold; /* Opcional: para hacer el texto del encabezado en negrita */
+}
+
+.btn-rojo {
+  background-color: #cc1e1e ;
+  color: white ;
+  margin: 0.5rem;
+  width: 9.5rem; /* Ancho del botón */
+  height: 3rem;
+  font-size: 1rem;
+  align-items: center; /* Centrar verticalmente */
+  justify-content: center; /* Centrar horizontalmente */
+  text-align: center; 
+  border-color:#cc1e1e  ;
+}
+
+.btn-rojo:hover {
+  background-color: #e40c0c ; /* Un color amarillo más oscuro para el hover */
+  color: white ;
+}
+
+.btn-amarillo {
+  background-color: #ca4d0a ;
+  color: white ;
+  margin: 0.5rem;
+  width: 9.5rem; /* Ancho del botón */
+  height: 3rem;
+  font-size: 1rem;
+  align-items: center; /* Centrar verticalmente */
+  justify-content: center; /* Centrar horizontalmente */
+  text-align: center; 
+  border-color: #ca4d0a ;
+}
+
+.btn-amarillo:hover {
+  background-color:  #e75f15 ; /* Un color amarillo más oscuro para el hover */
+  color: white ;
+}
+
+
+
+.primero{
+    background-color: #1ECCCC;
+    margin-top: 1rem !important;
+    color: white !important;
+    height: 3rem !important;
+    margin-bottom: 1rem ;
+    border-radius: 0.3rem;
+}
+
+.selector{
+  margin-bottom: 3rem !important;
+}
+
+.extra{
+  width: 25rem;
+}
+
+.demas{
+    background-color: #DBE3E3;
+    border-radius: 0.3rem;
+    margin-bottom: 1rem ;
+    margin-top: 1rem !important;
+    height: 3rem;
+}
+

@@ -1,0 +1,92 @@
+.color-btn{
+    background-color: #1ECCCC ;
+    color: white ;
+    margin: 0.5rem;
+    width: 9.5rem; /* Ancho del botón */
+    height: 3rem;
+    font-size: 1rem;
+    align-items: center; /* Centrar verticalmente */
+    justify-content: center; /* Centrar horizontalmente */
+    text-align: center; 
+    border-color:#1ECCCC ;
+}
+
+.azul-button {
+    background-color: #1e98cc ;
+    color: white ;
+    margin: 0.5rem;
+    width: 9.5rem; /* Ancho del botón */
+    height: 3rem;
+    font-size: 1rem;
+    align-items: center; /* Centrar verticalmente */
+    justify-content: center; /* Centrar horizontalmente */
+    text-align: center; 
+    border-color:#1e98cc  ;
+  }
+  
+  .azul-button:hover {
+    background-color: #0ca3e4 ; /* Un color amarillo más oscuro para el hover */
+    color: white ;
+  }
+
+  .seleccionable{
+    cursor: pointer;
+  }
+
+
+
+
+
+
+
+.yellow-button {
+    background-color: #efc34b ;
+    color: white ;
+    margin: 0.5rem;
+    width: 9.5rem; /* Ancho del botón */
+    height: 3rem;
+    font-size: 1rem;
+    align-items: center; /* Centrar verticalmente */
+    justify-content: center; /* Centrar horizontalmente */
+    text-align: center; 
+    border-color:#efc34b ;
+  }
+  
+  .yellow-button:hover {
+    background-color: #c6a323; /* Un color amarillo más oscuro para el hover */
+    color: white ;
+  }
+
+.linea{
+    background-color: #1ECCCC;
+    height: 0.2rem;
+}
+
+.letra{
+    color: #1ECCCC;
+}
+
+.margen{
+    margin-top: 1rem;
+}
+
+.muestradatos{
+    background-color: #DBE3E3 ;
+    width: 3rem;
+    height: 2rem;
+}
+
+
+
+.tam-2{
+    width: 8rem; /* Ancho del botón */
+    height: 3rem;
+}
+
+.color-btn:hover{
+    background-color: #1ba5a5 !important;
+    color: white !important;
+    border-color:#1ba5a5 !important;
+}
+
+
