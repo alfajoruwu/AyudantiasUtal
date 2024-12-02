@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { ToastContainer, toast } from 'react-toastify'
 import { TableCell, TableRow } from '@mui/material'
 import Modal from 'react-bootstrap/Modal'
 import Button from 'react-bootstrap/Button'
@@ -19,13 +18,13 @@ export default function Row ({ modulo }) {
       tareas: '',
       otros: '',
       id: null,
-      isLoading: false
+      isLoading: false,
+      isModified: false
     }))
   )
 
   const [showModal, setShowModal] = useState(false)
   const [modalContent, setModalContent] = useState('')
-
   const [showSolicitudModal, setShowSolicitudModal] = useState(false)
   const [solicitudComentario, setSolicitudComentario] = useState('')
   const [solicitudModuloId, setSolicitudModuloId] = useState(null)
@@ -63,87 +62,96 @@ export default function Row ({ modulo }) {
       return
     }
     if (oferta.id === null) {
-      if (oferta.horas_ayudantia === null || oferta.disponibilidad === '' || oferta.nota_mini === null || oferta.tareas === '') {
+      if (
+        oferta.horas_ayudantia === null ||
+        oferta.disponibilidad === '' ||
+        oferta.nota_mini === null ||
+        oferta.tareas === ''
+      ) {
+        alert('Complete todos los campos antes de enviar')
         return
       }
-      
+
       oferta.isLoading = true
-      axiosInstance.post('Ofertas/', {
+      axiosInstance
+        .post('Ofertas/', {
+          modulo: modulo.id,
+          horas_ayudantia: oferta.horas_ayudantia,
+          disponibilidad: oferta.disponibilidad,
+          nota_mini: oferta.nota_mini,
+          tareas: oferta.tareas,
+          otros: oferta.otros
+        })
+        .then((response) => {
+          oferta.id = response.data.id
+          oferta.isLoading = false
+          oferta.isModified = false
+          alert('¡Oferta creada correctamente!')
+        })
+        .catch((error) => {
+          console.log(error)
+          oferta.isLoading = false
+          alert('Error al crear la oferta.')
+        })
+    } else {
+      debouncedActualizarOferta(oferta)
+    }
+  }
+
+  const actualizarOferta = (oferta) => {
+    axiosInstance
+      .put(`Ofertas/${oferta.id}/`, {
         modulo: modulo.id,
         horas_ayudantia: oferta.horas_ayudantia,
         disponibilidad: oferta.disponibilidad,
         nota_mini: oferta.nota_mini,
         tareas: oferta.tareas,
         otros: oferta.otros
-      }).then(response => {
-        oferta.id = response.data.id
-        oferta.isLoading = false
-        toast.success('Oferta creada', { position: 'bottom-right' })
-      }).catch(error => {
-        console.log(error)
-        oferta.isLoading = false
       })
-    } else {
-      debuncedActualizarOferta(oferta)
-    }
+      .then(() => {
+        oferta.isModified = false
+        alert('¡Oferta actualizada correctamente!')
+      })
+      .catch((error) => {
+        console.log(error)
+        const errorMessage = error.response
+          ? error.response.data.detail
+          : 'Error desconocido'
+        alert(errorMessage)
+      })
   }
 
-  const actualizarOferta = (oferta) => {
-    axiosInstance.put('Ofertas/' + oferta.id + '/', {
-      modulo: modulo.id,
-      horas_ayudantia: oferta.horas_ayudantia,
-      disponibilidad: oferta.disponibilidad,
-      nota_mini: oferta.nota_mini,
-      tareas: oferta.tareas,
-      otros: oferta.otros
-    }).then(response => {
-      toast.success('Oferta actualizada', { position: 'bottom-right' })
-    }).catch(error => {
-      console.log(error)
-      if (error.response.status === 400) {
-        if (error.response.data?.detail) {
-          if (error.response.data.detail.startsWith('{\'')) {
-            // ejemplo de error: "{'disponibilidad': [ErrorDetail(string='Asegúrese de que este campo no tenga más de 100 caracteres.', code='max_length')]}"
-            // sacamos lo que este entre las primeras y segundas comillas simples, ignorando el resto y colocando en mayusculas la primera letra
-            // para que quede algo como: "Disponibilidad: Asegúrese de que este campo no tenga más de 100 caracteres."
-            const cleanedError = error.response.data.detail.split('\'')[1].charAt(0).toUpperCase() + error.response.data.detail.split('\'')[1].slice(1) + ': ' + error.response.data.detail.split('\'')[3]
-            toast.error(cleanedError, { position: 'bottom-right' })
-          } else {
-            const cleanedError = error.response.data.detail.replace(/[[\]']/g, '')
-            toast.error(cleanedError, { position: 'bottom-right' })
-          }
-        } else {
-          toast.error('Error al actualizar la oferta', { position: 'bottom-right' })
-        }
-      } else {
-        toast.error('Error desconocido', { position: 'bottom-right' })
-      }
-    })
-  }
-  const debuncedActualizarOferta = useCallback(debounce(actualizarOferta, 1000), [])
+  const debouncedActualizarOferta = useCallback(debounce(actualizarOferta, 1000), [])
 
   const crearOferta = () => {
     setOfertas([
       ...modulo.ofertas,
-      ...Array.from({ length: Nayudantes - modulo.ofertas.length }, () => ({
-        disponibilidad: '',
-        nota_mini: 4,
-        tareas: '',
-        otros: '',
-        id: null
-      }))
+      ...Array.from(
+        { length: Nayudantes - modulo.ofertas.length },
+        () => ({
+          disponibilidad: '',
+          nota_mini: 4,
+          tareas: '',
+          otros: '',
+          id: null,
+          isModified: false
+        })
+      )
     ])
   }
 
   const borrarOfertas = () => {
-    modulo.ofertas.slice(Nayudantes).forEach(oferta => {
+    modulo.ofertas.slice(Nayudantes).forEach((oferta) => {
       if (oferta.id !== null) {
-        axiosInstance.delete('Ofertas/' + oferta.id).then(response => {
-          toast.success('Oferta eliminada', { position: 'bottom-right' })
-        }).catch(error => {
-          console.log(error)
-          toast.error('Error al eliminar la oferta', { position: 'bottom-right' })
-        })
+        axiosInstance
+          .delete('Ofertas/' + oferta.id)
+          .then((response) => {
+            alert('Oferta eliminada')
+          })
+          .catch((error) => {
+            console.log(error)
+            alert('Error al eliminar la oferta')
+          })
         oferta.id = null
       }
     })
@@ -156,63 +164,74 @@ export default function Row ({ modulo }) {
     } else {
       borrarOfertas()
     }
-    setDesplegarOferta(Array.from({ length: Nayudantes }, (_, index) => desplegarOferta[index] || false))
+    setDesplegarOferta(
+      Array.from({ length: Nayudantes }, (_, index) => desplegarOferta[index] || false)
+    )
   }, [Nayudantes, modulo.ofertas])
 
-  const [desplegarOferta, setDesplegarOferta] = useState(Array.from({ length: modulo.ofertas.length }, () => false))
+  const [desplegarOferta, setDesplegarOferta] = useState(
+    Array.from({ length: modulo.ofertas.length }, () => false)
+  )
   const [desplegarModulo, setDesplegarModulo] = useState(false)
 
   const toggleModulo = () => {
     setDesplegarModulo(!desplegarModulo)
   }
   const toggleOferta = (index) => {
-    setDesplegarOferta(desplegarOferta.map((open, cellIndex) => (index === cellIndex ? !open : open)))
+    setDesplegarOferta(
+      desplegarOferta.map((open, cellIndex) =>
+        index === cellIndex ? !open : open
+      )
+    )
   }
   const cambiarDisponibilidad = (e, index) => {
     const newAyudantes = [...ofertas]
     newAyudantes[index].disponibilidad = e.target.value
+    newAyudantes[index].isModified = true
     guardarOfertas(newAyudantes)
-    mandarAlBack(newAyudantes[index])
   }
   const cambiarNota = (e, index) => {
     const newAyudantes = [...ofertas]
     newAyudantes[index].nota_mini = e.target.value
+    newAyudantes[index].isModified = true
     guardarOfertas(newAyudantes)
-    mandarAlBack(newAyudantes[index])
   }
   const cambiarTareas = (e, index) => {
     const newAyudantes = [...ofertas]
     newAyudantes[index].tareas = e.target.value
+    newAyudantes[index].isModified = true
     guardarOfertas(newAyudantes)
-    mandarAlBack(newAyudantes[index])
   }
   const cambiarOtros = (e, index) => {
     const newAyudantes = [...ofertas]
     newAyudantes[index].otros = e.target.value
+    newAyudantes[index].isModified = true
     guardarOfertas(newAyudantes)
-    mandarAlBack(newAyudantes[index])
   }
 
   const cambiarHoras = (horas, index) => {
     const newAyudantes = [...ofertas]
     newAyudantes[index].horas_ayudantia = parseInt(horas)
+    newAyudantes[index].isModified = true
     guardarOfertas(newAyudantes)
-    mandarAlBack(newAyudantes[index])
   }
 
   const enviarSolicitud = () => {
     if (solicitudComentario) {
-      axiosInstance.patch(`Modulos/${solicitudModuloId}/`, {
-        solicitud_horas: solicitudComentario
-      }).then(response => {
-        toast.success('Solicitud enviada', { position: 'bottom-right' })
-        handleCloseSolicitudModal()
-      }).catch(error => {
-        console.error('Error al enviar la solicitud:', error)
-        toast.error('Error al enviar la solicitud', { position: 'bottom-right' })
-      })
+      axiosInstance
+        .patch(`Modulos/${solicitudModuloId}/`, {
+          solicitud_horas: solicitudComentario
+        })
+        .then((response) => {
+          alert('Solicitud enviada')
+          handleCloseSolicitudModal()
+        })
+        .catch((error) => {
+          console.error('Error al enviar la solicitud', error)
+          alert('Error al enviar la solicitud')
+        })
     } else {
-      toast.error('Debes ingresar un comentario', { position: 'bottom-right' })
+      alert('Por favor, escribe un comentario para enviar la solicitud')
     }
   }
 
@@ -233,8 +252,7 @@ export default function Row ({ modulo }) {
     handleShowSolicitudModal(id, nombre)
   }
   const guardarInformacion = () => {
-    // Lógica para guardar la información
-    ofertas.forEach(oferta => {
+    ofertas.forEach((oferta) => {
       if (oferta.id !== null) {
         actualizarOferta(oferta)
       } else {
@@ -242,6 +260,7 @@ export default function Row ({ modulo }) {
       }
     })
   }
+
   return (
     <>
       <TableRow className='module-header table-row-margin seleccionable' onClick={toggleModulo}>
@@ -468,7 +487,7 @@ export default function Row ({ modulo }) {
           </Button>
         </Modal.Footer>
       </Modal>
-      <ToastContainer closeOnClick />
+     
     </>
   )
 }

@@ -27,8 +27,6 @@ class CustomUserManager(BaseUserManager):
         run_aux = run.replace(".", "").replace("-", "").replace(" ", "")
         run_aux, digito = run_aux[:-1], run_aux[-1]
 
-        if str(digito_verificador(int(run_aux))) != digito:
-            raise ValueError("Run no valido")
 
         user = self.model(
             run=run,
@@ -107,9 +105,9 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     # Abstractbaseuser has password, last_login, is_active by default
 
-    run = models.CharField(max_length=13, unique=True)
+    run = models.CharField(max_length=300, unique=True)
     nombre_completo = models.CharField(max_length=100)
-    email = models.EmailField(db_index=True, unique=True, max_length=254)
+    email = models.CharField(db_index=True, unique=True, max_length=254)
     otro_contacto = models.CharField(max_length=100, blank=True)
     matricula = models.CharField(max_length=12, blank=True)
     tipo_cuenta = models.CharField(max_length=20, blank=True)
@@ -126,7 +124,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomUserManager()
 
-    USERNAME_FIELD = "run"
+    USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     class Meta:
@@ -136,7 +134,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 # modelo para verificar
 class verificar(models.Model):
-    correo = models.EmailField(max_length=100)
+    correo = models.CharField(max_length=300)
     codigo = models.CharField(max_length=6)
     fecha = models.DateTimeField(auto_now_add=True)
 
@@ -147,6 +145,6 @@ class verificar(models.Model):
         ).delete()
 
         # si el codigo de verificacion es anterior a 5 minutos
-        if self.fecha < timezone.now() - timedelta(minutes=5):
+        if self.fecha < timezone.now() - timedelta(minutes=500):
             raise ValueError("Codigo de verificacion expirado")
         return self

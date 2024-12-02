@@ -12,7 +12,7 @@ const ProfesorList = () => {
   const [profesores, setProfesores] = useState([])
   const [error, setError] = useState(null)
   const [showModal, setShowModal] = useState(false)
-  const [newProfesor, setNewProfesor] = useState({ run: '', email: '', nombre_completo: '' })
+  const [newProfesor, setNewProfesor] = useState({ email: '', nombre_completo: '' })
   const [deleteModal, setDeleteModal] = useState({ show: false, profesorId: null })
 
   const Tablatitulos = ['Nombre del profesor', 'Email', 'Acciones']
@@ -51,7 +51,6 @@ const ProfesorList = () => {
   const handleCreate = async (event) => {
     event.preventDefault()
     const data = {
-      run: newProfesor.run,
       nombre_completo: newProfesor.nombre_completo,
       email: newProfesor.email
     }
@@ -83,7 +82,7 @@ const ProfesorList = () => {
             toast.error('Error datos incorrectos', { position: 'bottom-right' })
           }
         } else {
-          toast.error('Error al crear el profesor, el RUN ya existe', { position: 'bottom-right' })
+          toast.error('Error al crear el profesor', { position: 'bottom-right' })
         }
       } else {
         toast.error('Error desconocido', { position: 'bottom-right' })
@@ -105,25 +104,6 @@ const ProfesorList = () => {
     ),
     id: profesor.id
   }))
-
-  const formatearRun = (e) => {
-    const run = e.target.value
-    let runFormateado = run.replace(/[^0-9kK]/g, '')
-    if (runFormateado.length > 9) {
-      runFormateado = runFormateado.slice(0, -1)
-      return
-    }
-    if (runFormateado.length > 1) {
-      runFormateado = runFormateado.slice(0, -1) + '-' + runFormateado.slice(-1)
-    }
-    if (runFormateado.length > 6) {
-      runFormateado = runFormateado.slice(0, -5) + '.' + runFormateado.slice(-5)
-    }
-    if (runFormateado.length > 9) {
-      runFormateado = runFormateado.slice(0, -9) + '.' + runFormateado.slice(-9)
-    }
-    setNewProfesor({ ...newProfesor, run: runFormateado })
-  }
 
   return (
     <div className='principal'>
@@ -150,17 +130,6 @@ const ProfesorList = () => {
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleCreate}>
-            <Form.Group controlId='formRun'>
-              <Form.Label>RUN</Form.Label>
-              <Form.Control
-                type='text'
-                placeholder='Ingrese RUN'
-                name='run'
-                value={newProfesor.run}
-                onChange={formatearRun}
-                required
-              />
-            </Form.Group>
             <Form.Group controlId='formNombreCompleto'>
               <Form.Label>Nombre Completo</Form.Label>
               <Form.Control
@@ -175,7 +144,7 @@ const ProfesorList = () => {
             <Form.Group controlId='formEmail'>
               <Form.Label>Email</Form.Label>
               <Form.Control
-                type='email'
+                type='text'
                 placeholder='Ingrese email'
                 name='email'
                 value={newProfesor.email}
@@ -187,7 +156,7 @@ const ProfesorList = () => {
               <Button variant='secondary' onClick={() => setShowModal(false)}>
                 Cerrar
               </Button>
-              <Button variant='primary' type='submit' disabled={!newProfesor.run || !newProfesor.nombre_completo || !newProfesor.email}>
+              <Button variant='primary' type='submit' disabled={!newProfesor.nombre_completo || !newProfesor.email}>
                 Guardar Cambios
               </Button>
             </Modal.Footer>

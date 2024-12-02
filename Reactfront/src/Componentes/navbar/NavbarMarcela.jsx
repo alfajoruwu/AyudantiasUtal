@@ -71,18 +71,25 @@ const CustomNavbar = () => {
               >
                 Difusion
               </NavLink>
-              <NavLink
-                className={({ isActive }) => `nav-link colorTexto${isActive ? ' active' : ''}`}
-                to='/Ayudantes'
-              >
-                Ayudantes
-              </NavLink>
+
+              
+
               <NavLink
                 className={({ isActive }) => `nav-link colorTexto${isActive ? ' active' : ''}`}
                 to='/Resolucion'
               >
                 Proceso
               </NavLink>
+
+
+              <NavLink
+                className={({ isActive }) => `nav-link colorTexto${isActive ? ' active' : ''}`}
+                to='/Ayudantes'
+              >
+                Ayudantes
+              </NavLink>
+
+
               <NavLink
                 className={({ isActive }) => `nav-link colorTexto${isActive ? ' active' : ''}`}
                 to='/ListaProfesores'

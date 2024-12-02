@@ -17,8 +17,8 @@ const addRefreshSubscriber = (callback) => {
   refreshSubscribers.push(callback)
 }
 
-const login = async (run, password) => {
-  const response = await axios.post(API_URL, { run, password })
+const login = async (email, password) => {
+  const response = await axios.post(API_URL, { email, password })
   if (response.data.access) {
     setTokens(response.data.access, response.data.refresh)
   }

@@ -24,7 +24,7 @@ class DatosView(viewsets.GenericViewSet):
         return serializer_class(*args, **kwargs)
 
     def get_queryset(self):
-        return User.objects.filter(run=self.request.user)
+        return User.objects.filter(run=self.request.user.run)
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -32,7 +32,7 @@ class DatosView(viewsets.GenericViewSet):
         return Response(serializer.data[0], status=status.HTTP_200_OK)
 
     def partial_update(self, request, *args, **kwargs):
-        instance = User.objects.get(run=self.request.user)
+        instance = User.objects.get(run=self.request.user.run)
         serializer = self.get_serializer(instance, data=request.data, partial=True)
 
         serializer.is_valid(raise_exception=True)
@@ -44,7 +44,7 @@ class HorasEstudianteView(viewsets.GenericViewSet):
     serializer_class = HorasEstudianteSerializer
 
     def get_queryset(self):
-        return User.objects.filter(run=self.request.user)
+        return User.objects.filter(run=self.request.user.run)
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -73,8 +73,8 @@ class NombresProfesorView(viewsets.GenericViewSet):
 
 class TipoUsuarioView(viewsets.GenericViewSet):
     def get_queryset(self):
-        return User.objects.filter(run=self.request.user)
-
+        return User.objects.filter(run=self.request.user.run)
+    
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         print("tipo", queryset.first().groups.first().name)

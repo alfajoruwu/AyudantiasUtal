@@ -90,7 +90,6 @@ class UserCreationFormProfesor(forms.ModelForm):
     class Meta:
         model = User
         fields = [
-            "run",
             "nombre_completo",
             "email",
         ]
@@ -98,7 +97,7 @@ class UserCreationFormProfesor(forms.ModelForm):
     def save(self, commit=True):
         profesor = User.objects.create_profesor(
             password="a",
-            run=self.cleaned_data["run"],
+            run=self.cleaned_data["email"],
             nombre_completo=self.cleaned_data["nombre_completo"],
             email=self.cleaned_data["email"],
         )

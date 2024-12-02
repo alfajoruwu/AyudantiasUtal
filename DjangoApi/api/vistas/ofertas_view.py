@@ -29,7 +29,7 @@ class OfertasView(viewsets.GenericViewSet):
             return Oferta.objects.all()
         if self.request.user.groups.filter(name="Profesor").exists():
             return Oferta.objects.filter(
-                modulo__profesor_asignado__run=self.request.user
+                modulo__profesor_asignado__run=self.request.user.run
             )
         if self.request.user.groups.filter(name="Coordinador").exists():
             return Oferta.objects.all()

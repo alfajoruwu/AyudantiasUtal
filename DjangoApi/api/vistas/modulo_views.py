@@ -19,7 +19,7 @@ class ModulosView(viewsets.GenericViewSet):
 
     def get_queryset(self):
         if self.request.user.groups.filter(name="Profesor").exists():
-            return Modulo.objects.filter(profesor_asignado__run=self.request.user)
+            return Modulo.objects.filter(profesor_asignado__run=self.request.user.run)
         return Modulo.objects.all()
 
     def list(self, request, *args, **kwargs):

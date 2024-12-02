@@ -27,10 +27,10 @@ export default function Login (props) {
   const logearUsuario = async (event) => {
     event.preventDefault()
     try {
-      if (!run) throw new Error('El nombre de usuario es requerido.')
+      if (!email) throw new Error('El nombre de usuario es requerido.')
       if (!password) throw new Error('La contraseña es requerida.')
 
-      await authService.login(run, password)
+      await authService.login(email, password)
       setErrorMessage('')
       mandarAVista()
     } catch (error) {
@@ -145,12 +145,12 @@ export default function Login (props) {
                   </div>
                 )}
                 <div className='form-group mt-3'>
-                  <label>RUN</label>
+                  <label>Correo</label>
                   <input
                     className='form-control mt-1'
-                    placeholder='RUN'
-                    value={run}
-                    onChange={(e) => formatearRun(e.target.value)}
+                    placeholder='Correo'
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div className='form-group mt-3'>

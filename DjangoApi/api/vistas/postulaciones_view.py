@@ -29,7 +29,7 @@ class PostulacionesView(viewsets.GenericViewSet):
     def get_queryset(self):
         if self.request.user.groups.filter(name="Profesor").exists():
             return Postulacion.objects.filter(
-                oferta__modulo__profesor_asignado__run=self.request.user
+                oferta__modulo__profesor_asignado__run=self.request.user.run
             )
         if self.request.user.groups.filter(name="Coordinador").exists():
             # retorna todas las postulaciones que pertenecen a una oferta
