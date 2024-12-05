@@ -27,8 +27,8 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 run = "12345678-9"  # Reemplaza por un RUN válido
-password = "admin123"
-email = "admin@alumnos.utalca.cl"  # Reemplaza con un email válido
+password = "adminAyudanti@s!"
+email = "admin@utalca.cl"  # Reemplaza con un email válido
 
 if not User.objects.filter(run=run).exists():
     User.objects.create_superuser(run=run, email=email, password=password)
