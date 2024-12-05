@@ -23,7 +23,7 @@ import ProtectedRoute from '../utils/ProtectedRoute'
 
 export const Rutas = () => {
   return (
-    <Router>
+    <Router basename={'ayudantias'}>
       <Routes>
         {/* Añadir rutas de componentes */}
         <Route exact path='/' element={<Login />} />
