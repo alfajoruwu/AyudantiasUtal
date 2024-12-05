@@ -132,7 +132,7 @@ export default function Login (props) {
           ? (
             <form className='Auth-form' onSubmit={logearUsuario}>
               <div className='Auth-form-content'>
-                <h3 className='Auth-form-title'>Utalca ayudantias</h3>
+                <h3 className='Auth-form-title'>Ayudantias Curico-Utalca</h3>
                 <div className='text-center'>
                   No tienes cuenta?{' '}
                   <span className='link-custom' onClick={changeAuthMode}>
