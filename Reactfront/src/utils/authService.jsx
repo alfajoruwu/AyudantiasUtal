@@ -3,7 +3,7 @@ import Cookies from 'js-cookie'
 import { jwtDecode } from 'jwt-decode'
 import dayjs from 'dayjs'
 
-const API_URL = 'http://localhost:8000/token/'
+const API_URL = 'https://dcc.utalca.cl/backend/token/'
 const REFRESH_URL = `${API_URL}refresh/`
 
 let isRrefreshing = false
