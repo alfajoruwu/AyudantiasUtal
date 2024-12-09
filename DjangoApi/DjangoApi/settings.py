@@ -44,6 +44,10 @@ ALLOWED_HOSTS = ["*"]
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = ['http://localhost', 'http://127.0.0.1','https://dcc.utalca.cl']
+
 
 # Application definition
 
