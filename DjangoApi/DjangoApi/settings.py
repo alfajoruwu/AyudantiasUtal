@@ -36,7 +36,7 @@ FRONTEND_URL = "https://dcc.utalca.cl/ayudantias"  # URL del frontend para envia
 SECRET_KEY = "dsñfksldkfñlskd"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
