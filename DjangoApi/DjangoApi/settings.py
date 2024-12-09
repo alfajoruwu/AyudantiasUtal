@@ -36,13 +36,15 @@ FRONTEND_URL = "https://dcc.utalca.cl/ayudantias"  # URL del frontend para envia
 SECRET_KEY = "dsñfksldkfñlskd"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = ['*']
 
 # Application definition
 
