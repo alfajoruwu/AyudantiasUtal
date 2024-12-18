@@ -134,7 +134,7 @@ export default function Login (props) {
               <div className='Auth-form-content'>
                 <h3 className='Auth-form-title'>Ayudantias Curico-Utalca</h3>
                 <div className='text-center'>
-                  No tienes cuenta?{' '}
+                  ¿No tienes cuenta?{' '}
                   <span className='link-custom' onClick={changeAuthMode}>
                     Registrarse
                   </span>
@@ -184,9 +184,9 @@ export default function Login (props) {
             : (
               <form className='Auth-form' onSubmit={crearUsuario}>
                 <div className='Auth-form-content'>
-                  <h3 className='Auth-form-title'>Utalca ayudantías</h3>
+                  <h3 className='Auth-form-title'>Ayudantias Curico-Utalca</h3>
                   <div className='text-center'>
-                    Ya tienes cuenta?{' '}
+                    ¿Ya tienes cuenta?{' '}
                     <span className='link-custom' onClick={changeAuthMode}>
                       Iniciar sesión
                     </span>

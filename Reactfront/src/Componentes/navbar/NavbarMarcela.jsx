@@ -69,7 +69,7 @@ const CustomNavbar = () => {
                 className={({ isActive }) => `nav-link colorTexto${isActive ? ' active' : ''}`}
                 to='/Difusion'
               >
-                Difusion
+                Difusión
               </NavLink>
 
               
