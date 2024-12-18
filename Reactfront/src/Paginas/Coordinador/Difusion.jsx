@@ -62,7 +62,6 @@ const Difusion = () => {
     const filteredData = aplicarFiltros(data, {
       moduloSeleccionado: (item) => moduloSeleccionado === 'Todos' || item.Asignatura === moduloSeleccionado,
       profesorSeleccionado: (item) => profesorSeleccionado === 'Todos' || item.NombreProfesor === profesorSeleccionado
-
     })
     setModulos(['Todos', ...new Set(filteredData.map(item => item.Asignatura))])
     setProfesores(['Todos', ...new Set(filteredData.map(item => item.NombreProfesor))])

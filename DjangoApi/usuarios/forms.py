@@ -114,11 +114,18 @@ class UserCreationFormProfesor(forms.ModelForm):
         uid = urlsafe_base64_encode(force_bytes(profesor.pk))
         url = f"{settings.FRONTEND_URL}/reset/{uid}/{token}/"
         message = (
-            f"Hola {profesor.nombre_completo},\n\n"
-            "Hemos recibido una solicitud para recuperar tu contraseña.\n"
-            f"Si no has solicitado esto, ignora este mensaje.\n\n"
-            f"Para recuperar tu contraseña, visita el siguiente enlace:\n{url}\n\n"
-            "Gracias,\n"
-            "Este es un mensaje automático, por favor no respondas a este correo.\n"
-        )
+                        f"Hola {profesor.nombre_completo},\n\n"
+
+                        "Este es un sistema de gestion de ayudantias de la carrera Ingeniería civil en computación en sede Curico"
+                        
+                        "Hemos creado una solicitud para su ingreso en la plataforma.\n"
+
+                        f"Si nesesitas mayor informacion contactar a mpacheco@utalca.cl\n\n"
+                        
+                        f"Para crear tu contraseña, visita el siguiente enlace:\n{url}\n\n"
+                        
+                        "Gracias,\n"
+                        "Este es un mensaje automático, por favor no responder a este correo.\n"
+                    )
         enviar_correo(profesor.email, "Solicitud para recuperar contraseña", message)
+
