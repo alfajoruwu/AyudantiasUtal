@@ -102,9 +102,10 @@ export default function TablaSimplev2({ rows, titulos }) {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
-            <Row key={row.id} row={row} titulos={titulos} />
-          ))}
+        {rows.map((row) => {
+          console.log(row);
+          return <Row key={row.id} row={row} titulos={titulos} />;
+        })}
         </TableBody>
       </Table>
     </TableContainer>

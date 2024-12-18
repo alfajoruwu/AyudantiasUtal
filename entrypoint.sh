@@ -16,8 +16,8 @@
 cd DjangoApi
 
 # Ejecuta las migraciones de la base de datos antes de iniciar Django
-python DjangoApi/manage.py wait_for_db
-python DjangoApi/manage.py makemigrations
+python manage.py wait_for_db
+python manage.py makemigrations
 python manage.py migrate
 
 # Crea un superusuario automáticamente

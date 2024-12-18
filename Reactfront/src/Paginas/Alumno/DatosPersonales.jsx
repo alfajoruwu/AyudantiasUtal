@@ -198,7 +198,7 @@ const DatosPersonales = () => {
                   <div className='linea' />
                 </div>
                 <div className='col'>
-                  <input name='n_contacto' className='' onChange={(e) => setNContacto(e.target.value)} value={NContacto} />
+                  <input name='n_contacto' placeholder='+56912341234'  className='' onChange={(e) => setNContacto(e.target.value)} value={NContacto} />
                 </div>
               </div>
             </div>
@@ -212,8 +212,18 @@ const DatosPersonales = () => {
                   <div className='linea' />
                 </div>
                 <div className='col'>
-                  <input name='Promedio' className='' onChange={(e) => SetPromedio(e.target.value)} value={Promedio} />
-                </div>
+                <input 
+    name='Promedio' 
+    type='text' 
+    pattern="^\d*\.?\d*$"  // Regla de patrón para permitir solo números y un punto decimal
+    inputMode='decimal'    // Muestra el teclado adecuado en dispositivos móviles
+    autoComplete="off" 
+    onChange={(e) => {
+      const value = e.target.value.replace(',', '.');  // Reemplaza comas por puntos
+      SetPromedio(value);
+    }} 
+    value={Promedio} 
+  /></div>
               </div>
             </div>
             <div className='col' />

@@ -34,7 +34,7 @@ function Row (props) {
 
   const AlertaError = () => {
   
-    toast.error('Error, falta completar datos', { position: 'bottom-right' })
+    toast.error('Error, falta llenar datos', { position: 'bottom-right' })
 
   }
 
@@ -55,11 +55,22 @@ function Row (props) {
       AlertaExito(asignatura)
       console.log(response.data)
     } catch (error) {
-      toast.error('Error, falta completar datos personales', { position: 'bottom-right' })
+      // Verificar si el error tiene una respuesta
+      if (error.response && error.response.data && error.response.data.detail) {
+        // Comparar el detalle del error con la restricción UNIQUE
+        if (error.response.data.detail === "UNIQUE constraint failed: api_postulacion.postulante_id, api_postulacion.oferta_id") {
+          toast.error('Error, ayudantia ya postulada', { position: 'bottom-right' })
+        } else {
+          toast.error('Error, falta completar datos personales', { position: 'bottom-right' })
+        }
+      } else {
+        // En caso de que no sea un error con respuesta, muestra un mensaje genérico
+        toast.error('Error desconocido', { position: 'bottom-right' })
+      }
+      
       console.error('Error al enviar la solicitud:', error)
     }
   }
-
   const ObtenerValores = async (rowIndex, row) => {
     console.log('Botón de la fila', rowIndex, 'presionado')
     console.log(row)
@@ -75,7 +86,7 @@ function Row (props) {
 
       // LlenarDatos()
     } catch (error) {
-      toast.error('Error, falta completar datos', { position: 'bottom-right' })
+      toast.error('Error, falta llenar datos', { position: 'bottom-right' })
 
 
       
