@@ -116,7 +116,7 @@ class UserCreationFormProfesor(forms.ModelForm):
         message = (
                         f"Hola {profesor.nombre_completo},\n\n"
 
-                        "Este es un sistema de gestion de ayudantias de la carrera Ingeniería civil en computación en sede Curico"
+                        "Este es un sistema de gestion de ayudantias de la carrera Ingeniería civil en computación en sede Curico. "
                         
                         "Hemos creado una solicitud para su ingreso en la plataforma.\n"
 

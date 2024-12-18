@@ -228,7 +228,7 @@ def password_reset_request(request):
                     message = (
                         f"Hola {user.nombre_completo},\n\n"
 
-                        "Este es un sistema de gestion de ayudantias de la carrera Ingeniería civil en computación en sede Curico"
+                        "Este es un sistema de gestion de ayudantias de la carrera Ingeniería civil en computación en sede Curico. "
                         
                         "Hemos creado una solicitud para su ingreso en la plataforma.\n"
 
