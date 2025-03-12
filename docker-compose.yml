@@ -1,4 +1,3 @@
-version: '3'
 
 services:
   django:
@@ -28,7 +27,7 @@ services:
     ports:
       - "80:80"
     restart: unless-stopped
-
+  
 
   mariadb:
     image: mariadb:11.2
