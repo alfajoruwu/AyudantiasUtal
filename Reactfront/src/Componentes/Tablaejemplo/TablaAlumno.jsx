@@ -32,10 +32,15 @@ function Row (props) {
   const [Nota, SetNota] = React.useState(1)
   const [Comentario, SetComentario] = React.useState('Sin comentarios')
 
-  const AlertaError = () => {
-  
-    toast.error('Error, falta llenar datos', { position: 'bottom-right' })
-
+  // Función para mostrar errores específicos según los campos faltantes
+  const AlertaError = (camposFaltantes = []) => {
+    if (camposFaltantes.length > 0) {
+      // Mensaje específico con los campos que faltan
+      toast.error(`Error: Falta completar ${camposFaltantes.join(' y ')}`, { position: 'bottom-right' })
+    } else {
+      // Mensaje genérico en caso de que no se especifiquen los campos
+      toast.error('Error, falta llenar datos', { position: 'bottom-right' })
+    }
   }
 
   const AlertaExito = (nombre_ramo) => {
@@ -55,20 +60,109 @@ function Row (props) {
       AlertaExito(asignatura)
       console.log(response.data)
     } catch (error) {
-      // Verificar si el error tiene una respuesta
-      if (error.response && error.response.data && error.response.data.detail) {
-        // Comparar el detalle del error con la restricción UNIQUE
-        if (error.response.data.detail === "UNIQUE constraint failed: api_postulacion.postulante_id, api_postulacion.oferta_id") {
-          toast.error('Error, ayudantia ya postulada', { position: 'bottom-right' })
-        } else {
-          toast.error('Error, falta completar datos personales', { position: 'bottom-right' })
-        }
-      } else {
-        // En caso de que no sea un error con respuesta, muestra un mensaje genérico
-        toast.error('Error desconocido', { position: 'bottom-right' })
-      }
-      
       console.error('Error al enviar la solicitud:', error)
+      
+      // Verificar si el error tiene una respuesta
+      if (error.response) {
+        const { status, data } = error.response
+        
+        switch (status) {
+          case 400:
+            // Error de validación
+            if (data && typeof data === 'object') {
+              // Manejo de errores específicos de datos personales
+              if (data.non_field_errors && Array.isArray(data.non_field_errors)) {
+                const errorMsg = data.non_field_errors[0];
+                if (errorMsg.includes("datos personales") || errorMsg.includes("Promedio")) {
+                  toast.error('Para postular debes completar tus datos personales en la sección "Mis Datos", incluyendo tu promedio académico.', { position: 'bottom-right' })
+                  // Agregar instrucciones adicionales
+                  setTimeout(() => {
+                    toast.info('Dirígete al menú "Mis Datos" y completa toda tu información personal', { position: 'bottom-right' })
+                  }, 1000)
+                  return; // Para evitar mostrar errores adicionales
+                }
+              }
+            
+              // Manejo de diferentes mensajes de error por campo
+              if (data.nota_aprobacion) {
+                toast.error(`Nota: ${Array.isArray(data.nota_aprobacion) ? data.nota_aprobacion[0] : data.nota_aprobacion}`, { position: 'bottom-right' })
+              }
+              if (data.comentario) {
+                const errorComentario = Array.isArray(data.comentario) ? data.comentario[0] : data.comentario;
+                if (errorComentario.includes("255 caracteres")) {
+                  toast.error('El comentario no puede exceder los 255 caracteres', { position: 'bottom-right' })
+                  
+                  // Mostrar la longitud actual del comentario
+                  const comentario = document.querySelector('textarea[name="' + rowIndex + 'Comentario"]')?.value || "";
+                  if (comentario) {
+                    setTimeout(() => {
+                      toast.info(`Tu comentario actual tiene ${comentario.length} caracteres. Por favor, redúcelo a máximo 255.`, { position: 'bottom-right' })
+                    }, 1000)
+                  }
+                } else {
+                  toast.error(`Comentario: ${errorComentario}`, { position: 'bottom-right' })
+                }
+              }
+              if (data.postulante) {
+                const msgPostulante = Array.isArray(data.postulante) ? data.postulante[0] : data.postulante;
+                if (msgPostulante.includes("datos personales") || msgPostulante.includes("Promedio")) {
+                  toast.error('Debes completar tus datos personales en la sección "Mis Datos" antes de postular, incluyendo tu promedio académico.', { position: 'bottom-right' })
+                } else {
+                  toast.error(`Postulante: ${msgPostulante}`, { position: 'bottom-right' })
+                }
+              }
+              if (data.oferta) {
+                toast.error(`Oferta: ${Array.isArray(data.oferta) ? data.oferta[0] : data.oferta}`, { position: 'bottom-right' })
+              }
+              if (data.detail) {
+                if (data.detail === "UNIQUE constraint failed: api_postulacion.postulante_id, api_postulacion.oferta_id") {
+                  toast.error('Ya has postulado a esta ayudantía anteriormente', { position: 'bottom-right' })
+                } else if (data.detail.includes("falta completar")) {
+                  toast.error('Debes completar tus datos personales en la sección "Mis Datos" antes de postular. Asegúrate de llenar todos los campos incluyendo el promedio.', { position: 'bottom-right' })
+                } else if (data.detail.includes("promedio") || data.detail.includes("Promedio")) {
+                  toast.error('Tu promedio académico no cumple con los requisitos mínimos para esta ayudantía o no has registrado tu promedio en la sección "Mis Datos"', { position: 'bottom-right' })
+                } else {
+                  toast.error(`Error: ${data.detail}`, { position: 'bottom-right' })
+                }
+              }
+              
+              // Si no hay mensajes específicos, mostrar un mensaje general
+              if (!data.detail && !data.nota_aprobacion && !data.comentario && !data.postulante && !data.oferta) {
+                toast.error('Error en la validación de datos', { position: 'bottom-right' })
+              }
+            } else if (data && typeof data === 'string') {
+              toast.error(data, { position: 'bottom-right' })
+            } else {
+              toast.error('Error en la validación de datos', { position: 'bottom-right' })
+            }
+            break
+            
+          case 401:
+            toast.error('Sesión expirada. Por favor inicie sesión nuevamente.', { position: 'bottom-right' })
+            break
+            
+          case 403:
+            toast.error('No tienes permisos para postular a esta ayudantía', { position: 'bottom-right' })
+            break
+            
+          case 404:
+            toast.error('La oferta a la que intentas postular no existe o ya no está disponible', { position: 'bottom-right' })
+            break
+            
+          case 500:
+            toast.error('Error en el servidor. Por favor, intenta más tarde.', { position: 'bottom-right' })
+            break
+            
+          default:
+            toast.error(`Error (${status}): No se pudo completar la postulación`, { position: 'bottom-right' })
+        }
+      } else if (error.request) {
+        // No se recibió respuesta
+        toast.error('No se pudo conectar con el servidor. Verifica tu conexión.', { position: 'bottom-right' })
+      } else {
+        // Error en la configuración de la solicitud
+        toast.error('Error al preparar la solicitud: ' + error.message, { position: 'bottom-right' })
+      }
     }
   }
   const ObtenerValores = async (rowIndex, row) => {
@@ -78,20 +172,46 @@ function Row (props) {
     try {
       const valorNota = document.querySelector('input[name="' + rowIndex + 'Nota"]').value
       const comentario = document.querySelector('textarea[name="' + rowIndex + 'Comentario"]').value
+      const notaMinimaRequerida = data.find(item => item.id === row.id)?.nota_minima || 4.0
 
       console.log(comentario)
       console.log(valorNota)
+      console.log('Nota mínima requerida:', notaMinimaRequerida)
 
-      valorNota.length !== 0 && comentario.length !== 0 ? LlenarDatos(comentario, valorNota, row.id, 24144757, row.Asignatura) : AlertaError()
-
-      // LlenarDatos()
+      // Verificar qué campos específicos están vacíos
+      const camposFaltantes = []
+      
+      if (!valorNota || valorNota.trim() === '') {
+        camposFaltantes.push('la nota de aprobación')
+      } else if (isNaN(parseFloat(valorNota)) || parseFloat(valorNota) < 1 || parseFloat(valorNota) > 7) {
+        toast.error('La nota debe ser un número entre 1.0 y 7.0', { position: 'bottom-right' })
+        return
+      } else {
+        // Verificar si la nota cumple con la nota mínima requerida para la ayudantía
+        if (parseFloat(valorNota) < parseFloat(notaMinimaRequerida)) {
+          toast.warning(`Tu nota de aprobación (${valorNota}) es menor que la nota mínima requerida (${notaMinimaRequerida}) para esta ayudantía`, { position: 'bottom-right' })
+          // Aún así permitimos continuar, solo es una advertencia
+        }
+      }
+      
+      if (!comentario || comentario.trim() === '') {
+        camposFaltantes.push('el comentario')
+      } else if (comentario.length > 255) {
+        toast.error('El comentario no puede exceder los 255 caracteres', { position: 'bottom-right' })
+        return
+      }
+      
+      // Si hay campos faltantes, mostrar alerta con detalle
+      if (camposFaltantes.length > 0) {
+        AlertaError(camposFaltantes)
+        return
+      }
+      
+      // Si todos los campos están completos y son válidos, enviar los datos directamente
+      LlenarDatos(comentario, valorNota, row.id, 24144757, row.Asignatura)
     } catch (error) {
-      toast.error('Error, falta llenar datos', { position: 'bottom-right' })
-
-
-      
-      
-        
+      console.error('Error al obtener los valores del formulario:', error)
+      toast.error('Error al procesar el formulario. Por favor, inténtelo nuevamente.', { position: 'bottom-right' })
     }
   }
 
@@ -131,12 +251,50 @@ function Row (props) {
         </TableCell>
 
         <TableCell>
-        <textarea
-          name={rowIndex + 'Comentario'}
-          style={{ height: '4rem', resize: 'none', width: '95%', padding: '5px', fontSize: '0.9rem', border: '1px solid #1ECCCC', borderRadius: '5px' }}
-          onClick={(e) => { e.stopPropagation() }} 
-          placeholder='comentario'
-          />
+          <div style={{ position: 'relative', width: '100%' }}>
+            <textarea
+              name={rowIndex + 'Comentario'}
+              style={{ 
+                height: '4rem', 
+                resize: 'none', 
+                width: '95%', 
+                padding: '5px', 
+                fontSize: '0.9rem', 
+                border: '1px solid #1ECCCC', 
+                borderRadius: '5px' 
+              }}
+              onClick={(e) => { e.stopPropagation() }} 
+              placeholder='comentario (máximo 255 caracteres)'
+              maxLength={255}
+              onChange={(e) => {
+                const count = e.target.value.length;
+                const countDisplay = document.getElementById(`charCount-${rowIndex}`);
+                if (countDisplay) {
+                  countDisplay.textContent = `${count}/255`;
+                  if (count > 230) {
+                    countDisplay.style.color = count >= 255 ? 'red' : 'orange';
+                  } else {
+                    countDisplay.style.color = 'grey';
+                  }
+                }
+              }}
+            />
+            <div 
+              id={`charCount-${rowIndex}`}
+              style={{
+                position: 'absolute',
+                bottom: '5px',
+                right: '25px',
+                fontSize: '0.8rem',
+                color: 'grey',
+                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                padding: '0 5px',
+                borderRadius: '3px'
+              }}
+            >
+              0/255
+            </div>
+          </div>
         </TableCell>
 
         <TableCell>
@@ -218,7 +376,21 @@ export default function TablaAlumno ({ rows, titulos }) {
         }))
         setData(newData)
       } catch (error) {
+        console.error('Error al obtener detalles de las ofertas:', error)
         setError(error)
+        
+        // Mostrar mensajes de error específicos
+        if (error.response) {
+          if (error.response.status === 404) {
+            toast.error('No se encontraron detalles para las ofertas', { position: 'bottom-right' })
+          } else if (error.response.status === 401) {
+            toast.error('Sesión expirada. Por favor inicie sesión nuevamente.', { position: 'bottom-right' })
+          } else {
+            toast.error(`Error al cargar los detalles de las ofertas (${error.response.status})`, { position: 'bottom-right' })
+          }
+        } else {
+          toast.error('Error al cargar los detalles de las ofertas. Compruebe su conexión.', { position: 'bottom-right' })
+        }
       }
     }
 

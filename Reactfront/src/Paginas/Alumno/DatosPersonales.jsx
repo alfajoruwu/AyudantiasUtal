@@ -18,6 +18,23 @@ const DatosPersonales = () => {
   const [OtroContacto, setOtroContacto] = useState('')
   const [riesgo, setRiesgo] = useState('')
   const [charlagenero, setCharlagenero] = useState('')
+  
+  // Función para mostrar los errores del backend
+  const mostrarErroresBackend = (errorData) => {
+    if (typeof errorData !== 'object' || !errorData) {
+      toast.error('Error desconocido. Inténtelo de nuevo.', { position: 'bottom-right' })
+      return
+    }
+
+    // Mostrar cada mensaje de error en una notificación separada
+    Object.keys(errorData).forEach(campo => {
+      const mensaje = Array.isArray(errorData[campo]) 
+        ? errorData[campo][0] 
+        : errorData[campo]
+      
+      toast.error(`${campo}: ${mensaje}`, { position: 'bottom-right' })
+    })
+  }
 
   useEffect(() => {
     const ObtenerDatos = async () => {
@@ -36,25 +53,45 @@ const DatosPersonales = () => {
         setRiesgo(response.data.riesgo_academico)
         setCharlagenero(response.data.charla)
       } catch (error) {
-        console.error('Error al enviar la solicitud:', error)
+        console.error('Error al obtener los datos:', error)
+        if (error.response && error.response.data) {
+          // Si el backend envía un mensaje específico
+          if (typeof error.response.data === 'string') {
+            toast.error(`Error: ${error.response.data}`, { position: 'bottom-right' })
+          } else if (error.response.data.detail) {
+            toast.error(`Error: ${error.response.data.detail}`, { position: 'bottom-right' })
+          } else {
+            mostrarErroresBackend(error.response.data)
+          }
+        } else if (error.response) {
+          toast.error(`Error ${error.response.status}: No se pudieron cargar sus datos`, { position: 'bottom-right' })
+        } else {
+          toast.error('Error al cargar sus datos. Compruebe su conexión.', { position: 'bottom-right' })
+        }
       }
     }
     ObtenerDatos()
   }, [])
 
   const validarCampos = () => {
-    if (
-      !nombre ||
-      !correo ||
-      !matricula ||
-      !tipoCuenta ||
-      !NCuenta ||
-      !banco ||
-      !NContacto ||
-      !OtroContacto ||
-      !Promedio
-    ) {
-      toast.error('Por favor, complete todos los campos.', { position: 'bottom-right' })
+    const camposFaltantes = []
+    
+    if (!nombre) camposFaltantes.push('Nombre')
+    if (!correo) camposFaltantes.push('Correo')
+    if (!matricula) camposFaltantes.push('Matrícula')
+    if (!tipoCuenta) camposFaltantes.push('Tipo de cuenta')
+    if (!NCuenta) camposFaltantes.push('Número de cuenta')
+    if (!banco) camposFaltantes.push('Banco')
+    if (!NContacto) camposFaltantes.push('Número de contacto')
+    if (!OtroContacto) camposFaltantes.push('Otro contacto')
+    if (!Promedio) camposFaltantes.push('Promedio')
+    
+    if (camposFaltantes.length > 0) {
+      if (camposFaltantes.length > 2) {
+        toast.error(`Por favor, complete los siguientes campos: ${camposFaltantes.join(', ')}.`, { position: 'bottom-right' })
+      } else {
+        toast.error(`Por favor, complete el campo ${camposFaltantes.join(' y ')}.`, { position: 'bottom-right' })
+      }
       return false
     }
     return true
@@ -83,15 +120,50 @@ const DatosPersonales = () => {
       toast.success('Datos guardados exitosamente.', { position: 'bottom-right' })
     } catch (error) {
       console.error('Error al enviar la solicitud:', error)
-      if (error.response.status === 400) {
-        console.log(error.response.data.Promedio[0])
-        if (error.response.data.Promedio[0]) {
-          toast.error(error.response.data.Promedio[0], { position: 'bottom-right' })
-        } else {
-          toast.error('Error al enviar la solicitud. Inténtelo de nuevo.', { position: 'bottom-right' })
+      if (error.response) {
+        const { status, data } = error.response
+        
+        switch (status) {
+          case 400:
+            // Error de validación de datos
+            if (data && typeof data === 'object') {
+              console.log('Errores del backend:', data)
+              mostrarErroresBackend(data)
+            } else {
+              toast.error('Error en la validación de datos', { position: 'bottom-right' })
+            }
+            break
+            
+          case 401:
+            // Error de autenticación
+            toast.error('Sesión expirada. Por favor inicie sesión nuevamente.', { position: 'bottom-right' })
+            break
+            
+          case 403:
+            // Error de permisos
+            toast.error('No tiene permisos para realizar esta acción', { position: 'bottom-right' })
+            break
+            
+          case 404:
+            // Recurso no encontrado
+            toast.error('No se encontró el recurso solicitado', { position: 'bottom-right' })
+            break
+            
+          case 500:
+            // Error interno del servidor
+            toast.error('Error interno del servidor. Intente más tarde.', { position: 'bottom-right' })
+            break
+            
+          default:
+            // Otros errores
+            toast.error(`Error (${status}): ${data?.detail || 'Problema al procesar la solicitud'}`, { position: 'bottom-right' })
         }
+      } else if (error.request) {
+        // No se recibió respuesta del servidor
+        toast.error('No se recibió respuesta del servidor. Verifique su conexión.', { position: 'bottom-right' })
       } else {
-        toast.error('Error. Inténtelo de nuevo.', { position: 'bottom-right' })
+        // Error al configurar la solicitud
+        toast.error('Error al preparar la solicitud: ' + error.message, { position: 'bottom-right' })
       }
     }
   }

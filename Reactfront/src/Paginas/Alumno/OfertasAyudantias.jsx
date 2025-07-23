@@ -39,7 +39,50 @@ const OfertasAyudantias = () => {
         }))
         setData(newData)
       } catch (error) {
-        setError(error)        
+        console.error('Error al obtener ofertas de ayudantías:', error)
+        
+        if (error.response) {
+          const { status, data } = error.response
+          
+          switch (status) {
+            case 401:
+              toast.error('Su sesión ha expirado. Por favor inicie sesión nuevamente.', { position: 'bottom-right' })
+              setError({ message: 'Sesión expirada. Inicie sesión nuevamente.' })
+              break
+              
+            case 403:
+              toast.error('No tiene permisos para acceder a estas ofertas.', { position: 'bottom-right' })
+              setError({ message: 'Sin permisos para acceder a los datos.' })
+              break
+              
+            case 404:
+              toast.error('No se encontraron ofertas disponibles.', { position: 'bottom-right' })
+              setError({ message: 'No hay ofertas disponibles.' })
+              break
+              
+            case 500:
+              toast.error('Error en el servidor. Intente más tarde.', { position: 'bottom-right' })
+              setError({ message: 'Error del servidor. Intente más tarde.' })
+              break
+              
+            default:
+              if (data && data.detail) {
+                toast.error(`Error: ${data.detail}`, { position: 'bottom-right' })
+                setError({ message: data.detail })
+              } else {
+                toast.error(`Error (${status}): Problema al cargar las ofertas.`, { position: 'bottom-right' })
+                setError({ message: `Error ${status}: No se pudieron cargar las ofertas.` })
+              }
+          }
+        } else if (error.request) {
+          // No se recibió respuesta del servidor
+          toast.error('No se pudo conectar con el servidor. Verifique su conexión.', { position: 'bottom-right' })
+          setError({ message: 'Error de conexión. No se pudo contactar con el servidor.' })
+        } else {
+          // Error en la configuración de la solicitud
+          toast.error('Error al preparar la solicitud: ' + error.message, { position: 'bottom-right' })
+          setError({ message: `Error en la solicitud: ${error.message}` })
+        }       
       }
     }
 
@@ -82,7 +125,7 @@ const OfertasAyudantias = () => {
 
   const aplicarFiltros = (data, filtros) => {
     console.log(data)
-    return data.filter(item => {
+    const resultados = data.filter(item => {
       for (const key in filtros) {
         if (filtros[key] && !filtros[key](item)) {
           return false
@@ -90,6 +133,30 @@ const OfertasAyudantias = () => {
       }
       return true
     })
+    
+    // Si se aplicaron filtros y no hay resultados, mostrar mensaje
+    if (resultados.length === 0 && (moduloSeleccionado !== 'Todos' || hourFilter.value)) {
+      let mensajeFiltro = ''
+      
+      if (moduloSeleccionado !== 'Todos') {
+        mensajeFiltro += `módulo '${moduloSeleccionado}'`
+      }
+      
+      if (hourFilter.value) {
+        const operadorTexto = hourFilter.operator === '=' ? 'igual a' : 
+                             hourFilter.operator === '<' ? 'menor que' : 
+                             hourFilter.operator === '>' ? 'mayor que' : '';
+                             
+        mensajeFiltro += mensajeFiltro ? ` y horas ${operadorTexto} ${hourFilter.value}` : 
+                                        `horas ${operadorTexto} ${hourFilter.value}`
+      }
+      
+      if (mensajeFiltro) {
+        toast.info(`No se encontraron ayudantías con ${mensajeFiltro}`, { position: 'bottom-right' })
+      }
+    }
+    
+    return resultados
   }
 
   const filteredData = aplicarFiltros(data, filtros)
@@ -126,12 +193,20 @@ const OfertasAyudantias = () => {
         {error
           ? (
             <div className='alert alert-danger' role='alert'>
-              Error al cargar los datos: {error.message}
+              <h5>No se pudieron cargar las ofertas de ayudantías</h5>
+              <p>{error.message}</p>
+              <p>Si el problema persiste, contacte al administrador del sistema.</p>
             </div>
             )
-          : (
-            <TablaAlumno titulos={titulos} rows={filteredData} />
-            )}
+          : filteredData.length > 0
+            ? (
+              <TablaAlumno titulos={titulos} rows={filteredData} />
+              )
+            : (
+              <div className='alert alert-info' role='alert'>
+                No se encontraron ayudantías que coincidan con los filtros aplicados.
+              </div>
+              )}
             <ToastContainer />
       </div>
     </div>
