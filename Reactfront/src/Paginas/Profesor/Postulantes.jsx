@@ -9,22 +9,91 @@ import TablaSimple from '../../Componentes/Tablaejemplo/TablaSimpleProfesor'
 import axiosInstance from '../../utils/axiosInstance'
 
 const Postulantes = () => {
-  const titulos = ['Postulantes', 'Nota Aprobacion', 'Comentario', 'Contacto', 'Seleccionar']
+  const titulos = ['Postulantes', 'Matrícula', 'Nota Aprobacion', 'Estado', 'Comentario', 'Información', 'Seleccionar']
   const navigate = useNavigate()
   const { oferta } = useParams()
   const [rows, setRows] = useState([])
+  const [nombreModulo, setNombreModulo] = useState('')
 
   const setearRows = (data) => {
     const rows = data.map((postulante) => {
       return {
         id: postulante.id,
         Nombre: postulante.nombre_postulante,
+        Matricula: postulante.matricula || '-',
         NotaAprovacion: postulante.nota_aprobacion,
+        Estado: (
+          <div style={{ display: 'flex', gap: '5px' }}>
+            {postulante.riesgo_academico && 
+              <span title="En riesgo académico" style={{ 
+                backgroundColor: '#FFF3CD', 
+                color: '#856404', 
+                padding: '2px 8px', 
+                borderRadius: '4px', 
+                fontSize: '0.8em'
+              }}>
+                ⚠️ Riesgo
+              </span>
+            }
+            {postulante.charla_genero && 
+              <span title="Completó charla de género" style={{ 
+                backgroundColor: '#D4EDDA', 
+                color: '#155724', 
+                padding: '2px 8px', 
+                borderRadius: '4px', 
+                fontSize: '0.8em' 
+              }}>
+                ✓ Charla
+              </span>
+            }
+            {!postulante.riesgo_academico && !postulante.charla_genero && 
+              <span style={{ 
+                padding: '2px 8px',
+                fontSize: '0.8em' 
+              }}>
+                -
+              </span>
+            }
+          </div>
+        ),
         Comentario: postulante.comentario,
-        BotonContacto: {
-          titulo: 'Ver Contacto',
+        BotonInfo: {
+          titulo: 'Ver Info',
           funcion: () => {
-            window.alert('Correo: ' + postulante.contacto.correo + '\nTelefono: ' + postulante.contacto.telefono + '\nOtro: ' + postulante.contacto.otro)
+            // Crear una ventana modal personalizada con React-Toastify para mostrar información detallada
+            toast(
+              <div style={{ padding: '10px' }}>
+                <h5 style={{ borderBottom: '1px solid #ccc', paddingBottom: '8px', marginBottom: '10px' }}>
+                  Información del Postulante
+                </h5>
+                <div style={{ marginBottom: '10px' }}>
+                  <strong>Contacto:</strong><br />
+                  <span>📧 Correo: {postulante.contacto.correo}</span><br />
+                  <span>📱 Teléfono: {postulante.contacto.telefono}</span><br />
+                  {postulante.contacto.otro && <span>📝 Otro: {postulante.contacto.otro}</span>}
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <strong>Información académica:</strong><br />
+                  <span> Promedio: {postulante.promedio || 'No disponible'}</span>
+                </div>
+              </div>,
+              {
+                position: "top-center",
+                autoClose: false,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                style: {
+                  background: '#fff',
+                  color: '#333',
+                  minWidth: '320px',
+                  boxShadow: '0 3px 10px rgba(0,0,0,0.2)',
+                  borderRadius: '8px'
+                }
+              }
+            );
           }
         },
         BotonSeleccionar: {
@@ -62,9 +131,22 @@ const Postulantes = () => {
     setRows(rows)
   }
   useEffect(() => {
-    axiosInstance.get('/Postulaciones/' + oferta + '/').then((response) => {
-      setearRows(response.data)
-    })
+    // Obtener datos de los postulantes
+    axiosInstance.get('/Postulaciones/' + oferta + '/')
+      .then((response) => {
+        console.log('Datos de postulantes:', response.data)
+        setearRows(response.data)
+        
+        // Obtener el nombre del módulo
+        if (response.data && response.data.length > 0) {
+          const nombreModulo = response.data[0]?.modulo || 'Ayudantía';
+          setNombreModulo(nombreModulo);
+        }
+      })
+      .catch((error) => {
+        console.error('Error al obtener postulantes:', error)
+        toast.error('Error al cargar los postulantes', { position: 'bottom-right' })
+      })
   }, [oferta])
 
   return (
@@ -72,6 +154,12 @@ const Postulantes = () => {
       <Navbar />
 
       <div className='container Componente'>
+        <div className='row mb-4'>
+          <div className='col-12'>
+            <h3 className='mb-3'>{nombreModulo} - Listado de Postulantes</h3>
+          </div>
+        </div>
+        
         <TablaSimple rows={rows} titulos={titulos} />
 
         <div className='row'>
