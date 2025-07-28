@@ -233,7 +233,7 @@ Este es un mensaje automático, por favor no responder a este correo.
     @action(detail=False, methods=['post'])
     def observaciones_oferta(self, request, *args, **kwargs):
         """
-        Envía correo de notificación cuando un profesor agrega observaciones a una oferta.
+        Envía correo de notificación cuando un coordinador envía observaciones a un profesor sobre una oferta.
         """
         try:
             oferta_id = request.data.get('oferta_id')
@@ -254,32 +254,24 @@ Este es un mensaje automático, por favor no responder a este correo.
             profesor = oferta.modulo.profesor_asignado
             modulo_info = str(oferta.modulo)
             
-            # Obtener todos los coordinadores dinámicamente
-            coordinadores = User.objects.filter(groups__name="Coordinador")
-            
-            if not coordinadores.exists():
-                return Response(
-                    {"error": "No se encontraron coordinadores en el sistema"}, 
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            
-            asunto = f"Observaciones de Oferta - {modulo_info}"
-            mensaje = f"""
-Estimado/a Coordinador/a,
+            # Mensaje para el profesor (destinatario principal)
+            asunto_profesor = f"Observaciones del Coordinador - {modulo_info}"
+            mensaje_profesor = f"""
+Estimado/a {profesor.nombre_completo},
 
-El profesor {profesor.nombre_completo} ha agregado observaciones a la siguiente oferta:
+El coordinador ha revisado su oferta de ayudantía y tiene las siguientes observaciones que requieren su atención:
 
 DETALLES DE LA OFERTA:
 - Módulo: {modulo_info}
-- Profesor: {profesor.nombre_completo}
-- Email del profesor: {profesor.email}
 - Horas de ayudantía: {oferta.horas_ayudantia} horas
-- Ayudante asignado: {"Sí" if oferta.ayudante else "No"}
+- Estado: Pendiente (requiere correcciones)
 
-OBSERVACIONES:
+OBSERVACIONES DEL COORDINADOR:
 {observaciones}
 
-Para más detalles o contactar al profesor: {profesor.email}
+Por favor, revise estos comentarios y realice las correcciones necesarias en su oferta de ayudantía. Una vez realizados los cambios, puede volver a enviar la oferta para su aprobación.
+
+Para cualquier consulta, puede contactar al coordinador a través del sistema.
 
 Saludos cordiales,
 Sistema de Ayudantías UTAL
@@ -288,28 +280,33 @@ Sistema de Ayudantías UTAL
 Este es un mensaje automático, por favor no responder a este correo.
 """
             
-            # Enviar correo a todos los coordinadores
+            # Enviar correo al profesor
             correos_enviados = 0
-            for coordinador in coordinadores:
-                try:
-                    enviar_correo(coordinador.email, asunto, mensaje)
-                    correos_enviados += 1
-                except Exception as e:
-                    print(f"Error enviando correo a {coordinador.email}: {str(e)}")
+            try:
+                enviar_correo(profesor.email, asunto_profesor, mensaje_profesor)
+                correos_enviados += 1
+            except Exception as e:
+                print(f"Error enviando correo al profesor {profesor.email}: {str(e)}")
             
-            # También enviar confirmación al profesor
-            asunto_profesor = f"Confirmación de Observaciones - {modulo_info}"
-            mensaje_profesor = f"""
-Estimado/a {profesor.nombre_completo},
+            # Obtener el coordinador que hizo la observación (usuario actual)
+            coordinador_actual = request.user
+            
+            # Enviar copia de confirmación al coordinador que envió las observaciones
+            asunto_coordinador = f"Confirmación de Observaciones Enviadas - {modulo_info}"
+            mensaje_coordinador = f"""
+Estimado/a {coordinador_actual.nombre_completo},
 
-Sus observaciones han sido registradas exitosamente y enviadas al coordinador.
+Sus observaciones han sido enviadas exitosamente al profesor {profesor.nombre_completo}.
 
 DETALLES:
 - Módulo: {modulo_info}
-- Fecha de registro: Hoy
-- Observaciones: {observaciones}
+- Profesor notificado: {profesor.nombre_completo} ({profesor.email})
+- Fecha de envío: Hoy
 
-El coordinador ha sido notificado de sus observaciones.
+OBSERVACIONES ENVIADAS:
+{observaciones}
+
+El profesor ha sido notificado y deberá realizar las correcciones solicitadas antes de que la oferta pueda ser publicada.
 
 Saludos cordiales,
 Sistema de Ayudantías UTAL
@@ -319,27 +316,16 @@ Este es un mensaje automático, por favor no responder a este correo.
 """
             
             try:
-                enviar_correo(profesor.email, asunto_profesor, mensaje_profesor)
+                enviar_correo(coordinador_actual.email, asunto_coordinador, mensaje_coordinador)
                 correos_enviados += 1
             except Exception as e:
-                print(f"Error enviando correo de confirmación al profesor: {str(e)}")
+                print(f"Error enviando correo de confirmación al coordinador: {str(e)}")
             
             return Response({
-                "message": "Observaciones registradas y correos de notificación enviados exitosamente",
+                "message": "Observaciones enviadas exitosamente al profesor",
                 "correos_enviados": correos_enviados,
-                "coordinadores_notificados": coordinadores.count()
+                "profesor_notificado": profesor.nombre_completo
             }, status=status.HTTP_200_OK)
-            
-        except Oferta.DoesNotExist:
-            return Response(
-                {"error": "Oferta no encontrada"}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            return Response(
-                {"error": f"Error al procesar observaciones: {str(e)}"}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
             
         except Oferta.DoesNotExist:
             return Response(
