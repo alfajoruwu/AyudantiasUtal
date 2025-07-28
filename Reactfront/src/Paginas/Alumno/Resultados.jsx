@@ -25,11 +25,76 @@ const Resultados = () => {
         console.log(response.data)
         setYears([...new Set(response.data.map((item) => item.año))])
         setSemestres([...new Set(response.data.map((item) => item.semestre))])
+        
+        // Obtener información de todas las ofertas para determinar estados más detallados
+        const ofertasResponse = await axiosInstance.get('/Ofertas/')
+        const ofertas = ofertasResponse.data
+        
+        const newData = response.data.map(item => {
+          // Buscar la oferta correspondiente usando el ID de la oferta
+          const oferta = ofertas.find(o => o.id === item.id_oferta)
+          
+          let estadoTexto = 'No seleccionado'
+          let estadoColor = '#6c757d' // gris por defecto
+          
+          if (item.estado) {
+            estadoTexto = 'Seleccionado'
+            estadoColor = '#28a745' // verde
+          } else if (oferta && oferta.tiene_ayudante) {
+            estadoTexto = 'No disponible'
+            estadoColor = '#007bff' // azul suave
+          }
+          
+          return {
+            id: item.id_postulacion,
+            Asignatura: item.modulo,
+            Docente: item.profesor,
+            Estado: (
+              <span style={{ 
+                color: estadoColor, 
+                fontWeight: 'bold',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                backgroundColor: estadoColor + '20', // agregar transparencia
+                fontSize: '0.9em'
+              }}>
+                {estadoTexto}
+              </span>
+            ),
+            EstadoTexto: estadoTexto, // Guardamos el texto para filtrar
+            Horas: item.horas,
+            BotonPostulantes: {
+              titulo: 'Comunicarse',
+              funcion: () => {
+                alert('correo profesor: ' + item.correo_profesor)
+              }
+            },
+            año: item.año,
+            semestre: item.semestre
+          }
+        })
+        setdatosResultadospostula2(newData)
+        console.log(newData)
+      } catch (error) {
+        console.error('Error al obtener datos:', error)
+        // Si falla obtener las ofertas, usar solo la información básica
         const newData = response.data.map(item => ({
           id: item.id_postulacion,
           Asignatura: item.modulo,
           Docente: item.profesor,
-          Estado: item.estado ? 'seleccionado' : 'No seleccionado',
+          Estado: (
+            <span style={{ 
+              color: item.estado ? '#28a745' : '#6c757d', 
+              fontWeight: 'bold',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              backgroundColor: (item.estado ? '#28a745' : '#6c757d') + '20',
+              fontSize: '0.9em'
+            }}>
+              {item.estado ? 'Seleccionado' : 'No seleccionado'}
+            </span>
+          ),
+          EstadoTexto: item.estado ? 'Seleccionado' : 'No seleccionado',
           Horas: item.horas,
           BotonPostulantes: {
             titulo: 'Comunicarse',
@@ -41,9 +106,6 @@ const Resultados = () => {
           semestre: item.semestre
         }))
         setdatosResultadospostula2(newData)
-        console.log(newData)
-      } catch (error) {
-        setError(error)
       }
     }
 
@@ -87,7 +149,7 @@ const Resultados = () => {
   const filtros = {
     year: (row) => yearSeleccionado === 'Todos' || row.año === parseInt(yearSeleccionado),
     semestre: (row) => semestreSeleccionado === 'Todos' || row.semestre === parseInt(semestreSeleccionado),
-    estado: (row) => estadoSeleccionado === 'Todos' || row.Estado === estadoSeleccionado
+    estado: (row) => estadoSeleccionado === 'Todos' || row.EstadoTexto === estadoSeleccionado
   }
 
   const filteredData = aplicarFiltros(datosResultadospostula2, filtros).map((row) => {

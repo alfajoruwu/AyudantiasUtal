@@ -80,6 +80,7 @@ class PostulacionesEstudianteSerializer(
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         ret["modulo"] = instance.oferta.modulo.__str__()
+        ret["id_oferta"] = instance.oferta.id  # Agregar ID de la oferta
         ret.pop("oferta")
         ret["profesor"] = instance.oferta.modulo.profesor_asignado.nombre_completo
         ret["horas"] = instance.oferta.horas_ayudantia

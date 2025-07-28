@@ -12,6 +12,7 @@ class OfertasEstudianteSerializer(serializers.ModelSerializer):
         req = super().to_representation(instance)
         req["modulo"] = instance.modulo.__str__()
         req["profesor"] = instance.modulo.profesor_asignado.nombre_completo
+        req["tiene_ayudante"] = instance.ayudante is not None  # Agregar información si tiene ayudante asignado
         return req
 
 

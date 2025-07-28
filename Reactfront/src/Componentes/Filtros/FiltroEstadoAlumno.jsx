@@ -11,8 +11,9 @@ export const FiltroEstadoAlumno = ({ estadoSeleccionado, handleEstadoSeleccionad
         onChange={(e) => handleEstadoSeleccionado(e.target.value)}
       >
         <option value='Todos'>Todos</option>
-        <option value='seleccionado'>seleccionado</option>
+        <option value='Seleccionado'>Seleccionado</option>
         <option value='No seleccionado'>No seleccionado</option>
+        <option value='No disponible'>No disponible</option>
       </select>
     </div>
   </div>
