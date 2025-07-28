@@ -70,59 +70,83 @@ function Row (props) {
           case 400:
             // Error de validación
             if (data && typeof data === 'object') {
-              // Manejo de errores específicos de datos personales
+              // *** PRIORIDAD 1: VERIFICAR PRIMERO ERRORES DE DATOS PERSONALES ***
+              
+              // Verificar en non_field_errors
               if (data.non_field_errors && Array.isArray(data.non_field_errors)) {
                 const errorMsg = data.non_field_errors[0];
                 if (errorMsg.includes("datos personales") || errorMsg.includes("Promedio")) {
-                  toast.error('Para postular debes completar tus datos personales en la sección "Mis Datos", incluyendo tu promedio académico.', { position: 'bottom-right' })
+                  toast.error('🚨 ACCIÓN REQUERIDA: Debes completar tus datos personales en la sección "Mis Datos", incluyendo tu promedio académico.', { position: 'bottom-right' })
                   // Agregar instrucciones adicionales
                   setTimeout(() => {
-                    toast.info('Dirígete al menú "Mis Datos" y completa toda tu información personal', { position: 'bottom-right' })
+                    toast.info('📋 Dirígete al menú "Mis Datos" y completa toda tu información personal', { position: 'bottom-right' })
                   }, 1000)
                   return; // Para evitar mostrar errores adicionales
                 }
               }
-            
-              // Manejo de diferentes mensajes de error por campo
+              
+              // Verificar en field postulante (datos personales)
+              if (data.postulante) {
+                const msgPostulante = Array.isArray(data.postulante) ? data.postulante[0] : data.postulante;
+                if (msgPostulante.includes("datos personales") || msgPostulante.includes("Promedio")) {
+                  toast.error('🚨 ACCIÓN REQUERIDA: Debes completar tus datos personales en la sección "Mis Datos" antes de postular, incluyendo tu promedio académico.', { position: 'bottom-right' })
+                  setTimeout(() => {
+                    toast.info('📋 Dirígete al menú "Mis Datos" y completa toda tu información personal', { position: 'bottom-right' })
+                  }, 1000)
+                  return; // Para evitar mostrar errores adicionales
+                }
+              }
+              
+              // Verificar en detail (datos personales)
+              if (data.detail) {
+                if (data.detail.includes("falta completar")) {
+                  toast.error('🚨 ACCIÓN REQUERIDA: Debes completar tus datos personales en la sección "Mis Datos" antes de postular. Asegúrate de llenar todos los campos incluyendo el promedio.', { position: 'bottom-right' })
+                  setTimeout(() => {
+                    toast.info('📋 Dirígete al menú "Mis Datos" y completa toda tu información personal', { position: 'bottom-right' })
+                  }, 1000)
+                  return; // Para evitar mostrar errores adicionales
+                } else if (data.detail.includes("promedio") || data.detail.includes("Promedio")) {
+                  toast.error('🚨 PROBLEMA DE PROMEDIO: Tu promedio académico no cumple con los requisitos mínimos para esta ayudantía o no has registrado tu promedio en la sección "Mis Datos"', { position: 'bottom-right' })
+                  setTimeout(() => {
+                    toast.info('📋 Verifica tu promedio en "Mis Datos" y asegúrate de que cumple con los requisitos', { position: 'bottom-right' })
+                  }, 1000)
+                  return; // Para evitar mostrar errores adicionales
+                }
+              }
+              
+              // *** PRIORIDAD 2: OTROS ERRORES DE VALIDACIÓN ***
+              
+              // Manejo de errores de campos del formulario
               if (data.nota_aprobacion) {
-                toast.error(`Nota: ${Array.isArray(data.nota_aprobacion) ? data.nota_aprobacion[0] : data.nota_aprobacion}`, { position: 'bottom-right' })
+                toast.error(`📝 Nota: ${Array.isArray(data.nota_aprobacion) ? data.nota_aprobacion[0] : data.nota_aprobacion}`, { position: 'bottom-right' })
               }
               if (data.comentario) {
                 const errorComentario = Array.isArray(data.comentario) ? data.comentario[0] : data.comentario;
                 if (errorComentario.includes("255 caracteres")) {
-                  toast.error('El comentario no puede exceder los 255 caracteres', { position: 'bottom-right' })
+                  toast.error('📝 El comentario no puede exceder los 255 caracteres', { position: 'bottom-right' })
                   
                   // Mostrar la longitud actual del comentario
                   const comentario = document.querySelector('textarea[name="' + rowIndex + 'Comentario"]')?.value || "";
                   if (comentario) {
                     setTimeout(() => {
-                      toast.info(`Tu comentario actual tiene ${comentario.length} caracteres. Por favor, redúcelo a máximo 255.`, { position: 'bottom-right' })
+                      toast.info(`📊 Tu comentario actual tiene ${comentario.length} caracteres. Por favor, redúcelo a máximo 255.`, { position: 'bottom-right' })
                     }, 1000)
                   }
                 } else {
-                  toast.error(`Comentario: ${errorComentario}`, { position: 'bottom-right' })
+                  toast.error(`📝 Comentario: ${errorComentario}`, { position: 'bottom-right' })
                 }
               }
-              if (data.postulante) {
-                const msgPostulante = Array.isArray(data.postulante) ? data.postulante[0] : data.postulante;
-                if (msgPostulante.includes("datos personales") || msgPostulante.includes("Promedio")) {
-                  toast.error('Debes completar tus datos personales en la sección "Mis Datos" antes de postular, incluyendo tu promedio académico.', { position: 'bottom-right' })
-                } else {
-                  toast.error(`Postulante: ${msgPostulante}`, { position: 'bottom-right' })
-                }
+              if (data.postulante && !data.postulante.toString().includes("datos personales") && !data.postulante.toString().includes("Promedio")) {
+                toast.error(`👤 Postulante: ${Array.isArray(data.postulante) ? data.postulante[0] : data.postulante}`, { position: 'bottom-right' })
               }
               if (data.oferta) {
-                toast.error(`Oferta: ${Array.isArray(data.oferta) ? data.oferta[0] : data.oferta}`, { position: 'bottom-right' })
+                toast.error(`🎯 Oferta: ${Array.isArray(data.oferta) ? data.oferta[0] : data.oferta}`, { position: 'bottom-right' })
               }
-              if (data.detail) {
+              if (data.detail && !data.detail.includes("falta completar") && !data.detail.includes("promedio") && !data.detail.includes("Promedio")) {
                 if (data.detail === "UNIQUE constraint failed: api_postulacion.postulante_id, api_postulacion.oferta_id") {
-                  toast.error('Ya has postulado a esta ayudantía anteriormente', { position: 'bottom-right' })
-                } else if (data.detail.includes("falta completar")) {
-                  toast.error('Debes completar tus datos personales en la sección "Mis Datos" antes de postular. Asegúrate de llenar todos los campos incluyendo el promedio.', { position: 'bottom-right' })
-                } else if (data.detail.includes("promedio") || data.detail.includes("Promedio")) {
-                  toast.error('Tu promedio académico no cumple con los requisitos mínimos para esta ayudantía o no has registrado tu promedio en la sección "Mis Datos"', { position: 'bottom-right' })
+                  toast.error('⚠️ Ya has postulado a esta ayudantía anteriormente', { position: 'bottom-right' })
                 } else {
-                  toast.error(`Error: ${data.detail}`, { position: 'bottom-right' })
+                  toast.error(`❌ Error: ${data.detail}`, { position: 'bottom-right' })
                 }
               }
               

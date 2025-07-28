@@ -36,11 +36,27 @@ class OfertasView(viewsets.GenericViewSet):
         else:
             if Modulo.objects.count() == 0:
                 return Oferta.objects.none()
+            
+            # Obtener el año más reciente
             anio_maximo = Modulo.objects.latest("anio").anio
-            semestre_maximo = Modulo.objects.latest("semestre").semestre
-            return Oferta.objects.filter(
-                estado=True, modulo__anio=anio_maximo, modulo__semestre=semestre_maximo
+            
+            # Obtener el semestre más reciente DENTRO del año máximo
+            semestre_maximo = Modulo.objects.filter(anio=anio_maximo).latest("semestre").semestre
+            
+            print(f"🔍 DEBUG ESTUDIANTES - Filtrando ofertas: año={anio_maximo}, semestre={semestre_maximo}")
+            
+            # Filtrar ofertas: estado=True, del año y semestre más recientes
+            ofertas_filtradas = Oferta.objects.filter(
+                estado=True, 
+                modulo__anio=anio_maximo, 
+                modulo__semestre=semestre_maximo
             )
+            
+            print(f"📊 DEBUG ESTUDIANTES - Ofertas encontradas: {ofertas_filtradas.count()}")
+            for oferta in ofertas_filtradas:
+                print(f"   - {oferta.modulo.nombre} ({oferta.modulo.anio}-{oferta.modulo.semestre}) - Estado: {oferta.estado}")
+            
+            return ofertas_filtradas
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()

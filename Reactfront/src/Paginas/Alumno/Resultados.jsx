@@ -17,14 +17,40 @@ const Resultados = () => {
   const [yearSeleccionado, setYearSeleccionado] = useState('Todos')
   const [semestreSeleccionado, setSemestreSeleccionado] = useState('Todos')
   const [estadoSeleccionado, setEstadoSeleccionado] = useState('Todos')
+  const [isAutoSelected, setIsAutoSelected] = useState(false)
 
   useEffect(() => {
     const ObtenerDatos = async () => {
       try {
         const response = await axiosInstance.get('/Postulaciones/')
         console.log(response.data)
-        setYears([...new Set(response.data.map((item) => item.año))])
-        setSemestres([...new Set(response.data.map((item) => item.semestre))])
+        
+        // Obtener años y semestres únicos ordenados descendentemente
+        const yearsData = [...new Set(response.data.map((item) => item.año))].sort((a, b) => b - a)
+        const semestresData = [...new Set(response.data.map((item) => item.semestre))].sort((a, b) => b - a)
+        
+        setYears(yearsData)
+        setSemestres(semestresData)
+        
+        // *** SELECCIÓN AUTOMÁTICA DEL PERIODO MÁS RECIENTE ***
+        if (yearsData.length > 0 && !isAutoSelected) {
+          const yearMasReciente = yearsData[0]
+          
+          // Obtener el semestre más reciente del año más reciente
+          const semestresDelAnioReciente = [...new Set(
+            response.data
+              .filter(item => item.año === yearMasReciente)
+              .map(item => item.semestre)
+          )].sort((a, b) => b - a)
+          
+          const semestreMasReciente = semestresDelAnioReciente[0]
+          
+          setYearSeleccionado(yearMasReciente.toString())
+          setSemestreSeleccionado(semestreMasReciente ? semestreMasReciente.toString() : 'Todos')
+          setIsAutoSelected(true)
+          
+          console.log(`🎯 AUTO-SELECCIÓN: Año ${yearMasReciente}, Semestre ${semestreMasReciente}`)
+        }
         
         // Obtener información de todas las ofertas para determinar estados más detallados
         const ofertasResponse = await axiosInstance.get('/Ofertas/')
@@ -34,14 +60,14 @@ const Resultados = () => {
           // Buscar la oferta correspondiente usando el ID de la oferta
           const oferta = ofertas.find(o => o.id === item.id_oferta)
           
-          let estadoTexto = 'No seleccionado'
+          let estadoTexto = 'En espera'
           let estadoColor = '#6c757d' // gris por defecto
           
           if (item.estado) {
             estadoTexto = 'Seleccionado'
             estadoColor = '#28a745' // verde
           } else if (oferta && oferta.tiene_ayudante) {
-            estadoTexto = 'No disponible'
+            estadoTexto = 'No seleccionado'
             estadoColor = '#007bff' // azul suave
           }
           
@@ -125,6 +151,23 @@ const Resultados = () => {
 
   const handleYearChange = (year) => {
     setYearSeleccionado(year)
+    setIsAutoSelected(false) // Desactivar auto-selección cuando el usuario cambia manualmente
+    
+    // Si se selecciona un año específico, actualizar los semestres disponibles para ese año
+    if (year !== 'Todos' && datosResultadospostula2.length > 0) {
+      const semestresDelAnio = [...new Set(
+        datosResultadospostula2
+          .filter(item => item.año === parseInt(year))
+          .map(item => item.semestre)
+      )].sort((a, b) => b - a)
+      
+      // Si el semestre actual no está disponible en el año seleccionado, seleccionar el más reciente
+      if (semestreSeleccionado !== 'Todos' && !semestresDelAnio.includes(parseInt(semestreSeleccionado))) {
+        const semestreMasReciente = semestresDelAnio[0]
+        setSemestreSeleccionado(semestreMasReciente ? semestreMasReciente.toString() : 'Todos')
+        console.log(`📅 Semestre actualizado automáticamente a: ${semestreMasReciente}`)
+      }
+    }
   }
 
   const handleSemestreChange = (semestre) => {
@@ -172,6 +215,20 @@ const Resultados = () => {
             <FiltroSemestre semestres={['Todos', ...semestres]} semestreSeleccionado={semestreSeleccionado} handleSemestreSeleccionado={handleSemestreChange} />
             <FiltroEstadoAlumno estadoSeleccionado={estadoSeleccionado} handleEstadoSeleccionado={handleEstadoChange} />
           </div>
+          
+          {/* Indicador visual de selección automática */}
+          {isAutoSelected && yearSeleccionado !== 'Todos' && semestreSeleccionado !== 'Todos' && (
+            <div className="alert alert-info" role="alert" style={{ 
+              backgroundColor: '#e3f2fd', 
+              borderColor: '#1ECCCC', 
+              color: '#0d47a1',
+              fontSize: '0.9em',
+              padding: '8px 12px',
+              marginBottom: '15px'
+            }}>
+              📅 <strong>Filtro automático:</strong> Mostrando resultados del período más reciente ({yearSeleccionado}-{semestreSeleccionado})
+            </div>
+          )}
           <TablaSimplev2 rows={filteredData} titulos={Tablatitulos} />
         </div>
 
