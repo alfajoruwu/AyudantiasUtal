@@ -12,6 +12,7 @@ import axiosInstance from '../../utils/axiosInstance'
 
 export default function Row ({ modulo }) {
   const [Nayudantes, setNayudantes] = useState(modulo.ofertas.length)
+  const [inputValue, setInputValue] = useState(modulo.ofertas.length.toString())
   const [ofertas, setOfertas] = useState(
     Array.from({ length: Nayudantes }, (_, index) => ({
       disponibilidad: '',
@@ -31,10 +32,67 @@ export default function Row ({ modulo }) {
   const [solicitudModuloId, setSolicitudModuloId] = useState(null)
   const [solicitudModuloNombre, setSolicitudModuloNombre] = useState('')
   const [isLoadingSolicitud, setIsLoadingSolicitud] = useState(false)
+  
+  // Estados para el modal de confirmación de reducción de ayudantes
+  const [showConfirmacionModal, setShowConfirmacionModal] = useState(false)
+  const [nuevoNumeroAyudantes, setNuevoNumeroAyudantes] = useState(null)
+  const [ayudantiasAEliminar, setAyudantiasAEliminar] = useState([])
 
   const handleShowModal = (mensaje) => {
     setModalContent(mensaje)
     setShowModal(true)
+  }
+
+  // Función para manejar el cambio de número de ayudantes con confirmación
+  const handleCambioNumeroAyudantes = (nuevoNumero) => {
+    const numeroActual = modulo.ofertas.length
+    const nuevoNum = parseInt(nuevoNumero)
+    
+    // Actualizar el valor del input inmediatamente
+    setInputValue(nuevoNumero)
+    
+    // Si el valor no es válido, no procesar
+    if (isNaN(nuevoNum) || nuevoNum < 0) {
+      return
+    }
+    
+    // Si el número no ha cambiado, actualizar Nayudantes directamente
+    if (nuevoNum === numeroActual) {
+      setNayudantes(nuevoNum)
+      return
+    }
+    
+    // Si se está aumentando el número, proceder directamente
+    if (nuevoNum > numeroActual) {
+      setNayudantes(nuevoNum)
+      return
+    }
+    
+    // Si se está reduciendo, mostrar modal de confirmación
+    if (nuevoNum < numeroActual) {
+      const ayudantiasQueSeEliminaran = modulo.ofertas.slice(nuevoNum)
+      setNuevoNumeroAyudantes(nuevoNum)
+      setAyudantiasAEliminar(ayudantiasQueSeEliminaran)
+      setShowConfirmacionModal(true)
+      return
+    }
+  }
+
+  // Función para confirmar la reducción de ayudantes
+  const confirmarReduccionAyudantes = () => {
+    setNayudantes(nuevoNumeroAyudantes)
+    setShowConfirmacionModal(false)
+    setNuevoNumeroAyudantes(null)
+    setAyudantiasAEliminar([])
+  }
+
+  // Función para cancelar la reducción de ayudantes
+  const cancelarReduccionAyudantes = () => {
+    setShowConfirmacionModal(false)
+    setNuevoNumeroAyudantes(null)
+    setAyudantiasAEliminar([])
+    // Restaurar el valor original en el campo
+    setInputValue(Nayudantes.toString())
   }
 
   const debounce = (func, delay) => {
@@ -307,8 +365,8 @@ export default function Row ({ modulo }) {
             id={`Nayudantes_${modulo.id}`}
             name={`Nayudantes_${modulo.id}`}
             type='number'
-            value={Nayudantes}
-            onChange={(e) => setNayudantes(e.target.value)}
+            value={inputValue}
+            onChange={(e) => handleCambioNumeroAyudantes(e.target.value)}
             onClick={(e) => { e.stopPropagation() }}
             variant='outlined'
             size='small'
@@ -545,6 +603,101 @@ export default function Row ({ modulo }) {
             disabled={isLoadingSolicitud || !solicitudComentario.trim()}
           >
             {isLoadingSolicitud ? 'Enviando...' : 'Enviar Solicitud'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de confirmación para reducción de ayudantes */}
+      <Modal show={showConfirmacionModal} onHide={cancelarReduccionAyudantes}>
+        <Modal.Header closeButton>
+          <Modal.Title style={{ color: '#d32f2f' }}>
+            <strong>⚠️ Confirmar Reducción de Ayudantes</strong>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div style={{ marginBottom: '15px' }}>
+            <p><strong>¿Está seguro que desea reducir el número de ayudantes?</strong></p>
+            <p>
+              Está intentando cambiar de <strong>{modulo.ofertas.length} ayudantes</strong> a{' '}
+              <strong>{nuevoNumeroAyudantes} ayudantes</strong> para el módulo{' '}
+              <strong>{modulo.Asignatura}</strong>.
+            </p>
+          </div>
+
+          <div style={{ 
+            backgroundColor: '#ffebee', 
+            padding: '15px', 
+            borderRadius: '5px', 
+            border: '1px solid #ffcdd2',
+            marginBottom: '15px'
+          }}>
+            <h6 style={{ color: '#d32f2f', marginBottom: '10px' }}>
+              <strong>⚠️ ADVERTENCIA: Esta acción eliminará permanentemente:</strong>
+            </h6>
+            <ul style={{ marginBottom: '10px', paddingLeft: '20px' }}>
+              <li><strong>Todas las postulaciones</strong> de estudiantes a estas ayudantías</li>
+              <li><strong>Datos de las ofertas</strong> (disponibilidad, tareas, requisitos, etc.)</li>
+              <li><strong>Observaciones</strong> y comentarios realizados</li>
+              <li><strong>Estado de publicación</strong> de las ofertas</li>
+            </ul>
+            <p style={{ color: '#d32f2f', marginBottom: '0', fontWeight: 'bold' }}>
+              Esta información NO se puede recuperar una vez eliminada.
+            </p>
+          </div>
+
+          {ayudantiasAEliminar.length > 0 && (
+            <div style={{ 
+              backgroundColor: '#fff3e0', 
+              padding: '10px', 
+              borderRadius: '5px', 
+              border: '1px solid #ffcc02' 
+            }}>
+              <h6 style={{ color: '#f57c00', marginBottom: '8px' }}>
+                <strong>Ayudantías que se eliminarán:</strong>
+              </h6>
+              {ayudantiasAEliminar.map((oferta, index) => (
+                <div key={index} style={{ fontSize: '0.9em', marginBottom: '5px' }}>
+                  • <strong>Ayudantía {modulo.ofertas.length - ayudantiasAEliminar.length + index + 1}</strong>
+                  {oferta.disponibilidad && (
+                    <span style={{ color: '#666' }}> - Disponibilidad definida</span>
+                  )}
+                  {oferta.tareas && (
+                    <span style={{ color: '#666' }}> - Tareas definidas</span>
+                  )}
+                  {oferta.observaciones && (
+                    <span style={{ color: '#666' }}> - Con observaciones</span>
+                  )}
+                  {oferta.estado && (
+                    <span style={{ color: '#4caf50', fontWeight: 'bold' }}> - PUBLICADA</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ 
+            marginTop: '15px', 
+            padding: '10px', 
+            backgroundColor: '#f5f5f5', 
+            borderRadius: '5px',
+            fontSize: '0.9em',
+            textAlign: 'center'
+          }}>
+            <strong>Si está seguro, haga clic en "Sí, Eliminar Ayudantías"</strong>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button 
+            variant='secondary' 
+            onClick={cancelarReduccionAyudantes}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            variant='danger' 
+            onClick={confirmarReduccionAyudantes}
+          >
+            Sí, Eliminar Ayudantías
           </Button>
         </Modal.Footer>
       </Modal>
