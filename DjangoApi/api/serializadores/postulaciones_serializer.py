@@ -12,10 +12,13 @@ class PostulacionesProfesorSerializer(
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
+        ret["matricula"] = instance.postulante.matricula
         ret["nombre_postulante"] = instance.postulante.nombre_completo
         ret["run_postulante"] = instance.postulante.run
         ret["modulo"] = instance.oferta.modulo.__str__()
         ret["riesgo_academico"] = instance.postulante.riesgo_academico
+        ret["charla_genero"] = instance.postulante.charla  # Añadido para mostrar si completó la charla de género
+        ret["promedio"] = instance.postulante.Promedio     # Añadido para mostrar el promedio
         ret.pop("oferta")
         ret["horas"] = instance.oferta.horas_ayudantia
         ret["contacto"] = {
