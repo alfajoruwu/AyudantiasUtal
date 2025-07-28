@@ -20,7 +20,12 @@ const Difusion = () => {
   const [profesores, setProfesores] = useState([])
   const [profesorSeleccionado, setProfesorSeleccionado] = useState('Todos')
   const [estadoSeleccionado, setEstadoSeleccionado] = useState('Todos')
-  const [fechaInicio, setFechaInicio] = useState(null)
+  
+  // Solo fechaInicio con persistencia en localStorage
+  const [fechaInicio, setFechaInicio] = useState(() => {
+    const savedFechaInicio = localStorage.getItem('difusion_fechaInicio')
+    return savedFechaInicio ? new Date(savedFechaInicio) : null
+  })
   const [fechaFin, setFechaFin] = useState(null)
   const [showModal, setShowModal] = useState(false)
 
@@ -56,6 +61,20 @@ const Difusion = () => {
   const handleFechaSeleccionada = (start, end) => {
     setFechaInicio(start)
     setFechaFin(end)
+    
+    // Guardar solo la fecha de inicio en localStorage
+    if (start) {
+      localStorage.setItem('difusion_fechaInicio', start.toISOString())
+    } else {
+      localStorage.removeItem('difusion_fechaInicio')
+    }
+  }
+
+  // Función para limpiar la fecha de inicio persistente
+  const limpiarFechaInicio = () => {
+    setFechaInicio(null)
+    localStorage.removeItem('difusion_fechaInicio')
+    toast.success('Filtro de fecha de inicio limpiado', { position: 'bottom-right' })
   }
 
   const actualizarFiltros = () => {
@@ -153,7 +172,35 @@ const Difusion = () => {
           <FiltroFecha
             handleFechaSeleccionada={handleFechaSeleccionada}
           />
+          <div className='col-md-2'>
+            <Button 
+              style={{ height: '3rem', marginTop: '1rem' }} 
+              variant={fechaInicio ? 'warning' : 'outline-secondary'}
+              onClick={limpiarFechaInicio}
+              title="Limpiar filtro de fecha de inicio persistente"
+              disabled={!fechaInicio}
+            > 
+              Limpiar Fecha {fechaInicio && <span className="badge bg-danger ms-1">!</span>}
+            </Button>
+          </div>
         </div>
+        
+        {/* Indicador de fecha de inicio persistente */}
+        {fechaInicio && (
+          <div className='row mb-2'>
+            <div className='col-12'>
+              <div className='alert alert-info py-2' style={{ fontSize: '0.9em' }}>
+                <i className='fas fa-calendar me-2'></i>
+                <strong>Filtro persistente activo:</strong> Fecha de inicio desde {fechaInicio.toLocaleDateString('es-ES')}. 
+                Este filtro se mantendrá al recargar la página.
+                <span className='ms-2'>
+                  Mostrando {filteredData.length} de {data.length} elementos.
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className='d-flex mb-3'>
           <button className='btn btn-danger ms-auto' onClick={handleShow}>Despublicar ofertas en pantalla</button>
         </div>

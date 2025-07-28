@@ -18,16 +18,19 @@ const HorasAsignadas = () => {
   const [data, setData] = useState([])
   const [error, setError] = useState(null)
   const [modulos, setModulos] = useState([])
+  
+  // Estados de filtros con selección automática del año y semestre más actuales
   const [moduloSeleccionado, setModuloSeleccionado] = useState('Todos')
-  const [profesores, setProfesores] = useState([])
   const [profesorSeleccionado, setProfesorSeleccionado] = useState('Todos')
   const [hoursFilter, setHoursFilter] = useState('all')
+  const [yearSeleccionado, setYearSeleccionado] = useState('Todos')
+  const [semestreSeleccionado, setSemestreSeleccionado] = useState('Todos')
+  
+  const [profesores, setProfesores] = useState([])
   const [showPopup, setShowPopup] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [modalContent, setModalContent] = useState('')
   const [modalContent2, setModalContent2] = useState('')
-  const [yearSeleccionado, setYearSeleccionado] = useState('Todos')
-  const [semestreSeleccionado, setSemestreSeleccionado] = useState('Todos')
   const [years, setYears] = useState([])
   const [semestres, setSemestres] = useState([])
   const [modalEliminarVisible, setModalEliminarVisible] = useState(false)
@@ -38,8 +41,31 @@ const HorasAsignadas = () => {
   const ObtenerDatos = async () => {
     try {
       const responseModulos = await axiosInstance.get('Modulos/')
-      setYears([...new Set(responseModulos.data.map(item => item.anio))])
+      
+      // Obtener años únicos y ordenarlos de mayor a menor
+      const yearsArray = [...new Set(responseModulos.data.map(item => item.anio))].sort((a, b) => b - a)
+      setYears(yearsArray)
+      
+      // Seleccionar automáticamente el año más reciente
+      const yearMasReciente = yearsArray.length > 0 ? yearsArray[0].toString() : 'Todos'
+      
+      // Obtener semestres disponibles para el año más reciente
+      const semestresDelYearMasReciente = [...new Set(
+        responseModulos.data
+          .filter(item => item.anio === parseInt(yearMasReciente))
+          .map(item => item.semestre)
+      )].sort((a, b) => b - a) // Ordenar de mayor a menor (2, 1)
+      
       setSemestres([...new Set(responseModulos.data.map(item => item.semestre))])
+      
+      // Seleccionar automáticamente el semestre más reciente del año más reciente
+      const semestreMasReciente = semestresDelYearMasReciente.length > 0 ? 
+        semestresDelYearMasReciente[0].toString() : 'Todos'
+      
+      // Establecer automáticamente los filtros más actuales
+      setYearSeleccionado(yearMasReciente)
+      setSemestreSeleccionado(semestreMasReciente)
+      
       const responseProfesores = await axiosInstance.get('NombresProfesor/')
 
       const profesores = [{ id: null, nombre_completo: 'No asignado' }, ...responseProfesores.data]
@@ -63,6 +89,10 @@ const HorasAsignadas = () => {
       }))
       setData(newData)
       setModulos(['Todos', ...new Set(responseModulos.data.map(item => item.nombre))])
+      
+      console.log(`Año más reciente seleccionado automáticamente: ${yearMasReciente}`)
+      console.log(`Semestre más reciente seleccionado automáticamente: ${semestreMasReciente}`)
+      
     } catch (error) {
       console.log(error)
       setError(error)
@@ -138,6 +168,22 @@ const HorasAsignadas = () => {
 
   const handleYearSeleccionado = (year) => {
     setYearSeleccionado(year)
+    
+    // Si se selecciona un año específico, actualizar los semestres disponibles para ese año
+    if (year !== 'Todos') {
+      const semestresDelYear = [...new Set(
+        data
+          .filter(item => item.anio === parseInt(year))
+          .map(item => item.semestre)
+      )].sort((a, b) => b - a) // Ordenar de mayor a menor
+      
+      // Si el semestre actual no existe en el nuevo año, seleccionar el más reciente
+      const semestreActual = parseInt(semestreSeleccionado)
+      if (!semestresDelYear.includes(semestreActual) && semestresDelYear.length > 0) {
+        setSemestreSeleccionado(semestresDelYear[0].toString())
+        console.log(`Semestre actualizado automáticamente a ${semestresDelYear[0]} para el año ${year}`)
+      }
+    }
   }
 
   const handleSemestreSeleccionado = (semestre) => {
@@ -295,6 +341,25 @@ const HorasAsignadas = () => {
             <Button style={{ height: '3rem', marginTop: '1rem' }} variant='danger' onClick={toggleModalEliminar}> Eliminar módulo </Button>
           </div>
         </div>
+        
+        {/* Indicador de filtros automáticos aplicados */}
+        {(yearSeleccionado !== 'Todos' || semestreSeleccionado !== 'Todos') && (
+          <div className='row mb-2'>
+            <div className='col-12'>
+              <div className='alert alert-success py-2' style={{ fontSize: '0.9em' }}>
+                <i className='fas fa-calendar me-2'></i>
+                <strong>Filtros automáticos:</strong> 
+                {yearSeleccionado !== 'Todos' && ` Año ${yearSeleccionado}`}
+                {semestreSeleccionado !== 'Todos' && ` - Semestre ${semestreSeleccionado}`}
+                {yearSeleccionado !== 'Todos' && semestreSeleccionado !== 'Todos' && ' (período más reciente)'}.
+                <span className='ms-2'>
+                  Resultados: {filteredData.length} de {data.length} elementos.
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className='row'>
           <TablaSimplev2
             titulos={Tablatitulos}

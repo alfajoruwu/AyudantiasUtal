@@ -30,7 +30,12 @@ const Resolucion = () => {
   const [procesoSeleccionado, setProcesoSeleccionado] = useState('Todos')
   const [resolucion, setResolucion] = useState([])
   const [filtroResolucion, setFiltroResolucion] = useState('Todos')
-  const [fechaInicio, setFechaInicio] = useState(null)
+  
+  // Solo fechaInicio con persistencia en localStorage
+  const [fechaInicio, setFechaInicio] = useState(() => {
+    const savedFechaInicio = localStorage.getItem('resolucion_fechaInicio')
+    return savedFechaInicio ? new Date(savedFechaInicio) : null
+  })
   const [fechaFin, setFechaFin] = useState(null)
 
   // Referencias que le paso a la tablaSimplev2 (no se si es la mejor forma de hacerlo pero funciona)
@@ -186,6 +191,20 @@ const Resolucion = () => {
   const handleFechaSeleccionada = (start, end) => {
     setFechaInicio(start)
     setFechaFin(end)
+    
+    // Guardar solo la fecha de inicio en localStorage
+    if (start) {
+      localStorage.setItem('resolucion_fechaInicio', start.toISOString())
+    } else {
+      localStorage.removeItem('resolucion_fechaInicio')
+    }
+  }
+
+  // Función para limpiar la fecha de inicio persistente
+  const limpiarFechaInicio = () => {
+    setFechaInicio(null)
+    localStorage.removeItem('resolucion_fechaInicio')
+    toast.success('Filtro de fecha de inicio limpiado', { position: 'bottom-right' })
   }
 
   const filtros = {
@@ -242,8 +261,36 @@ const Resolucion = () => {
             <FiltroFecha
               handleFechaSeleccionada={handleFechaSeleccionada}
             />
+            <div className='col-md-2'>
+              <Button 
+                style={{ height: '3rem', marginTop: '1rem' }} 
+                variant={fechaInicio ? 'warning' : 'outline-secondary'}
+                onClick={limpiarFechaInicio}
+                title="Limpiar filtro de fecha de inicio persistente"
+                disabled={!fechaInicio}
+              > 
+                Limpiar Fecha {fechaInicio && <span className="badge bg-danger ms-1">!</span>}
+              </Button>
+            </div>
           </div>
         </div>
+        
+        {/* Indicador de fecha de inicio persistente */}
+        {fechaInicio && (
+          <div className='row mb-2'>
+            <div className='col-12'>
+              <div className='alert alert-info py-2' style={{ fontSize: '0.9em' }}>
+                <i className='fas fa-calendar me-2'></i>
+                <strong>Filtro persistente activo:</strong> Fecha de inicio desde {fechaInicio.toLocaleDateString('es-ES')}. 
+                Este filtro se mantendrá al recargar la página.
+                <span className='ms-2'>
+                  Mostrando {filteredData.length} de {rows.length} elementos.
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className='row mt-3'>
           <Tabla titulos={titulos} rows={filteredData} mostrarBoton={false} />
           {loading && <div className='spinner' />}
