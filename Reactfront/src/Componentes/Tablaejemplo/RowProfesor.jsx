@@ -3,6 +3,7 @@ import { TableCell, TableRow } from '@mui/material'
 import Modal from 'react-bootstrap/Modal'
 import Button from 'react-bootstrap/Button'
 import TextField from '@mui/material/TextField'
+import { toast } from 'react-toastify'
 
 import '../../Paginas/App/App.css'
 import './Tabla.css'
@@ -29,6 +30,7 @@ export default function Row ({ modulo }) {
   const [solicitudComentario, setSolicitudComentario] = useState('')
   const [solicitudModuloId, setSolicitudModuloId] = useState(null)
   const [solicitudModuloNombre, setSolicitudModuloNombre] = useState('')
+  const [isLoadingSolicitud, setIsLoadingSolicitud] = useState(false)
 
   const handleShowModal = (mensaje) => {
     setModalContent(mensaje)
@@ -217,21 +219,50 @@ export default function Row ({ modulo }) {
   }
 
   const enviarSolicitud = () => {
-    if (solicitudComentario) {
+    if (solicitudComentario.trim()) {
+      setIsLoadingSolicitud(true)
+      
+      // Primero actualizar el módulo con la solicitud
       axiosInstance
         .patch(`Modulos/${solicitudModuloId}/`, {
           solicitud_horas: solicitudComentario
         })
         .then((response) => {
-          alert('Solicitud enviada')
+          // Luego enviar los correos
+          return axiosInstance.post('correo/solicitud_horas/', {
+            modulo_id: solicitudModuloId,
+            solicitud_horas: solicitudComentario
+          })
+        })
+        .then((response) => {
+          const coordinadoresNotificados = response.data.coordinadores_notificados || 1;
+          toast.success(`Solicitud enviada exitosamente. Se han enviado correos de notificación a ${coordinadoresNotificados} coordinador(es) y confirmación a usted.`, { 
+            position: 'bottom-right',
+            autoClose: 5000
+          })
           handleCloseSolicitudModal()
         })
         .catch((error) => {
-          console.error('Error al enviar la solicitud', error)
-          alert('Error al enviar la solicitud')
+          console.error('Error al enviar la solicitud:', error)
+          if (error.response?.data?.correos_enviados) {
+            toast.warning('Solicitud guardada, pero hubo un problema enviando algunos correos de notificación.', { 
+              position: 'bottom-right',
+              autoClose: 5000 
+            })
+            handleCloseSolicitudModal()
+          } else {
+            toast.error(error.response?.data?.error || 'Error al enviar la solicitud', { 
+              position: 'bottom-right' 
+            })
+          }
+        })
+        .finally(() => {
+          setIsLoadingSolicitud(false)
         })
     } else {
-      alert('Por favor, escribe un comentario para enviar la solicitud')
+      toast.error('Por favor, escriba un comentario para enviar la solicitud', { 
+        position: 'bottom-right' 
+      })
     }
   }
 
@@ -242,10 +273,12 @@ export default function Row ({ modulo }) {
   }
 
   const handleCloseSolicitudModal = () => {
-    setSolicitudComentario('')
-    setSolicitudModuloId(null)
-    setSolicitudModuloNombre('')
-    setShowSolicitudModal(false)
+    if (!isLoadingSolicitud) {
+      setSolicitudComentario('')
+      setSolicitudModuloId(null)
+      setSolicitudModuloNombre('')
+      setShowSolicitudModal(false)
+    }
   }
 
   const SolicitarHoras = (id, nombre) => {
@@ -475,15 +508,43 @@ export default function Row ({ modulo }) {
               onChange={(e) => setSolicitudComentario(e.target.value)}
               multiline
               rows={4}
+              disabled={isLoadingSolicitud}
+              inputProps={{ maxLength: 500 }}
             />
+            <div style={{ fontSize: '0.8em', color: '#666', marginTop: '5px' }}>
+              {solicitudComentario.length}/500 caracteres
+            </div>
+            
+            <div style={{ 
+              backgroundColor: '#e3f2fd', 
+              padding: '10px', 
+              borderRadius: '5px', 
+              marginTop: '15px',
+              fontSize: '0.9em' 
+            }}>
+              <strong>Al enviar esta solicitud:</strong>
+              <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
+                <li>Se enviará un correo a <strong>todos los coordinadores</strong> con los detalles</li>
+                <li>Recibirá un correo de <strong>confirmación</strong></li>
+                <li>Los coordinadores revisarán su solicitud a la brevedad</li>
+              </ul>
+            </div>
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant='secondary' onClick={handleCloseSolicitudModal}>
+          <Button 
+            variant='secondary' 
+            onClick={handleCloseSolicitudModal}
+            disabled={isLoadingSolicitud}
+          >
             Cancelar
           </Button>
-          <Button variant='primary' onClick={enviarSolicitud}>
-            Enviar Solicitud
+          <Button 
+            variant='primary' 
+            onClick={enviarSolicitud}
+            disabled={isLoadingSolicitud || !solicitudComentario.trim()}
+          >
+            {isLoadingSolicitud ? 'Enviando...' : 'Enviar Solicitud'}
           </Button>
         </Modal.Footer>
       </Modal>

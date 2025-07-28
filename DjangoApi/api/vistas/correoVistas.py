@@ -3,8 +3,10 @@
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.contrib.auth.models import Group
 from ..utils import enviar_correo  # Importa la función desde utils.py
-from ..models import Postulacion, Oferta
+from ..models import Postulacion, Oferta, Modulo
+from usuarios.models import User
 
 class Correos(viewsets.GenericViewSet):
     permission_classes = []
@@ -113,5 +115,239 @@ Este es un mensaje automático, por favor no responder a este correo.
         except Exception as e:
             return Response(
                 {"error": f"Error al enviar notificaciones: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=['post'])
+    def solicitud_horas(self, request, *args, **kwargs):
+        """
+        Envía correo de notificación cuando un profesor solicita más horas para un módulo.
+        """
+        try:
+            modulo_id = request.data.get('modulo_id')
+            solicitud_horas = request.data.get('solicitud_horas')
+            
+            if not modulo_id or not solicitud_horas:
+                return Response(
+                    {"error": "Se requieren modulo_id y solicitud_horas"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Obtener el módulo y actualizar la solicitud
+            modulo = Modulo.objects.get(id=modulo_id)
+            modulo.solicitud_horas = solicitud_horas
+            modulo.save()
+            
+            # Información del módulo y profesor
+            profesor = modulo.profesor_asignado
+            modulo_info = str(modulo)
+            
+            # Obtener todos los coordinadores dinámicamente
+            coordinadores = User.objects.filter(groups__name="Coordinador")
+            
+            if not coordinadores.exists():
+                return Response(
+                    {"error": "No se encontraron coordinadores en el sistema"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            asunto = f"Solicitud de Horas Adicionales - {modulo_info}"
+            mensaje = f"""
+Estimado/a Coordinador/a,
+
+El profesor {profesor.nombre_completo} ha realizado una solicitud de horas adicionales para el siguiente módulo:
+
+DETALLES DEL MÓDULO:
+- Módulo: {modulo_info}
+- Profesor: {profesor.nombre_completo}
+- Email del profesor: {profesor.email}
+- Horas actuales asignadas: {modulo.horas_asignadas} horas
+
+SOLICITUD:
+{solicitud_horas}
+
+Por favor, revise esta solicitud a la brevedad posible.
+
+Para contactar al profesor directamente: {profesor.email}
+
+Saludos cordiales,
+Sistema de Ayudantías UTAL
+
+---
+Este es un mensaje automático, por favor no responder a este correo.
+"""
+            
+            # Enviar correo a todos los coordinadores
+            correos_enviados = 0
+            for coordinador in coordinadores:
+                try:
+                    enviar_correo(coordinador.email, asunto, mensaje)
+                    correos_enviados += 1
+                except Exception as e:
+                    print(f"Error enviando correo a {coordinador.email}: {str(e)}")
+            
+            # También enviar confirmación al profesor
+            asunto_profesor = f"Confirmación de Solicitud de Horas - {modulo_info}"
+            mensaje_profesor = f"""
+Estimado/a {profesor.nombre_completo},
+
+Su solicitud de horas adicionales ha sido enviada exitosamente al coordinador.
+
+DETALLES DE SU SOLICITUD:
+- Módulo: {modulo_info}
+- Fecha de solicitud: {modulo.fecha_modificacion if hasattr(modulo, 'fecha_modificacion') else 'Hoy'}
+- Solicitud: {solicitud_horas}
+
+El coordinador revisará su solicitud y se pondrá en contacto con usted a la brevedad.
+
+Saludos cordiales,
+Sistema de Ayudantías UTAL
+
+---
+Este es un mensaje automático, por favor no responder a este correo.
+"""
+            
+            try:
+                enviar_correo(profesor.email, asunto_profesor, mensaje_profesor)
+                correos_enviados += 1
+            except Exception as e:
+                print(f"Error enviando correo de confirmación al profesor: {str(e)}")
+            
+            return Response({
+                "message": "Solicitud de horas enviada y correos de notificación enviados exitosamente",
+                "correos_enviados": correos_enviados,
+                "coordinadores_notificados": coordinadores.count()
+            }, status=status.HTTP_200_OK)
+            
+        except Modulo.DoesNotExist:
+            return Response(
+                {"error": "Módulo no encontrado"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Error al procesar solicitud de horas: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=['post'])
+    def observaciones_oferta(self, request, *args, **kwargs):
+        """
+        Envía correo de notificación cuando un profesor agrega observaciones a una oferta.
+        """
+        try:
+            oferta_id = request.data.get('oferta_id')
+            observaciones = request.data.get('observaciones')
+            
+            if not oferta_id or not observaciones:
+                return Response(
+                    {"error": "Se requieren oferta_id y observaciones"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Obtener la oferta y actualizar las observaciones
+            oferta = Oferta.objects.get(id=oferta_id)
+            oferta.observaciones = observaciones
+            oferta.save()
+            
+            # Información de la oferta y profesor
+            profesor = oferta.modulo.profesor_asignado
+            modulo_info = str(oferta.modulo)
+            
+            # Obtener todos los coordinadores dinámicamente
+            coordinadores = User.objects.filter(groups__name="Coordinador")
+            
+            if not coordinadores.exists():
+                return Response(
+                    {"error": "No se encontraron coordinadores en el sistema"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            asunto = f"Observaciones de Oferta - {modulo_info}"
+            mensaje = f"""
+Estimado/a Coordinador/a,
+
+El profesor {profesor.nombre_completo} ha agregado observaciones a la siguiente oferta:
+
+DETALLES DE LA OFERTA:
+- Módulo: {modulo_info}
+- Profesor: {profesor.nombre_completo}
+- Email del profesor: {profesor.email}
+- Horas de ayudantía: {oferta.horas_ayudantia} horas
+- Ayudante asignado: {"Sí" if oferta.ayudante else "No"}
+
+OBSERVACIONES:
+{observaciones}
+
+Para más detalles o contactar al profesor: {profesor.email}
+
+Saludos cordiales,
+Sistema de Ayudantías UTAL
+
+---
+Este es un mensaje automático, por favor no responder a este correo.
+"""
+            
+            # Enviar correo a todos los coordinadores
+            correos_enviados = 0
+            for coordinador in coordinadores:
+                try:
+                    enviar_correo(coordinador.email, asunto, mensaje)
+                    correos_enviados += 1
+                except Exception as e:
+                    print(f"Error enviando correo a {coordinador.email}: {str(e)}")
+            
+            # También enviar confirmación al profesor
+            asunto_profesor = f"Confirmación de Observaciones - {modulo_info}"
+            mensaje_profesor = f"""
+Estimado/a {profesor.nombre_completo},
+
+Sus observaciones han sido registradas exitosamente y enviadas al coordinador.
+
+DETALLES:
+- Módulo: {modulo_info}
+- Fecha de registro: Hoy
+- Observaciones: {observaciones}
+
+El coordinador ha sido notificado de sus observaciones.
+
+Saludos cordiales,
+Sistema de Ayudantías UTAL
+
+---
+Este es un mensaje automático, por favor no responder a este correo.
+"""
+            
+            try:
+                enviar_correo(profesor.email, asunto_profesor, mensaje_profesor)
+                correos_enviados += 1
+            except Exception as e:
+                print(f"Error enviando correo de confirmación al profesor: {str(e)}")
+            
+            return Response({
+                "message": "Observaciones registradas y correos de notificación enviados exitosamente",
+                "correos_enviados": correos_enviados,
+                "coordinadores_notificados": coordinadores.count()
+            }, status=status.HTTP_200_OK)
+            
+        except Oferta.DoesNotExist:
+            return Response(
+                {"error": "Oferta no encontrada"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Error al procesar observaciones: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+        except Oferta.DoesNotExist:
+            return Response(
+                {"error": "Oferta no encontrada"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Error al procesar observaciones: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )

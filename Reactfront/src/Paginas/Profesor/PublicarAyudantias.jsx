@@ -1,5 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { useEffect, useState, useRef } from 'react'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 import '../App/App.css'
 import Navbar from '../../Componentes/navbar/NavbarProfesor'
 import Tabla from '../../Componentes/Tablaejemplo/TablaProfesor'
@@ -105,6 +107,7 @@ const PublicarAyudantias = () => {
           <Tabla titulos={titulos} rows={filteredData} rowRefs={rowRefs} mostrarBoton />
         </div>
       </div>
+      <ToastContainer />
     </div>
 
   )
