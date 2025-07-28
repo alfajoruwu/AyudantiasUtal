@@ -6,6 +6,7 @@ import { ToastContainer, toast } from 'react-toastify'
 import '../App/App.css'
 import Navbar from '../../Componentes/navbar/NavbarProfesor'
 import TablaSimple from '../../Componentes/Tablaejemplo/TablaSimpleProfesor'
+import ModalConfirmacion from '../../Componentes/ModalConfirmacion/ModalConfirmacion'
 import axiosInstance from '../../utils/axiosInstance'
 
 const Postulantes = () => {
@@ -14,6 +15,60 @@ const Postulantes = () => {
   const { oferta } = useParams()
   const [rows, setRows] = useState([])
   const [nombreModulo, setNombreModulo] = useState('')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [postulantePendiente, setPostulantePendiente] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleConfirmarSeleccion = () => {
+    if (!postulantePendiente) return
+    
+    setIsLoading(true)
+    
+    // Primero seleccionar al postulante
+    axiosInstance.patch('/Postulaciones/' + postulantePendiente.id + '/', { id: postulantePendiente.id, estado: true })
+      .then((response) => {
+        if (response.data.estado) {
+          // Enviar notificaciones por correo
+          return axiosInstance.post('/correo/notificar_seleccion/', {
+            oferta_id: oferta,
+            postulante_id: postulantePendiente.id
+          })
+        }
+      })
+      .then((emailResponse) => {
+        toast.success(`Ayudante seleccionado y ${emailResponse.data.correos_enviados} correos enviados`, { 
+          position: 'bottom-right',
+          autoClose: 5000
+        })
+        setModalOpen(false)
+        setPostulantePendiente(null)
+        navigate('/VerPostulantes')
+      })
+      .catch((error) => {
+        console.log('Error en el proceso:', error)
+        if (error.response?.data?.correos_enviados) {
+          toast.warning('Ayudante seleccionado, pero hubo un error enviando algunas notificaciones por correo', { 
+            position: 'bottom-right',
+            autoClose: 7000
+          })
+          navigate('/VerPostulantes')
+        } else {
+          toast.error(error.response?.data?.detail || 'Error en el proceso de selección', { 
+            position: 'bottom-right' 
+          })
+        }
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
+  }
+
+  const handleCerrarModal = () => {
+    if (!isLoading) {
+      setModalOpen(false)
+      setPostulantePendiente(null)
+    }
+  }
 
   const setearRows = (data) => {
     const rows = data.map((postulante) => {
@@ -100,30 +155,31 @@ const Postulantes = () => {
           titulo: 'Seleccionar',
           estado: postulante.estado,
           funcion: () => {
-            axiosInstance.patch('/Postulaciones/' + postulante.id + '/', { id: postulante.id, estado: !postulante.estado }).then((response) => {
-              if (response.data.estado) {
-                navigate('/VerPostulantes')
-              } else {
-                // actualizar datos
-                axiosInstance.get('/Postulaciones/' + oferta + '/').then((response) => {
-                  setearRows(response.data)
-                }).then(() => {
-                  toast.success('Postulante deseleccionado', { position: 'bottom-right' })
+            // Si ya está seleccionado, deseleccionar directamente
+            if (postulante.estado) {
+              axiosInstance.patch('/Postulaciones/' + postulante.id + '/', { id: postulante.id, estado: false })
+                .then((response) => {
+                  // actualizar datos
+                  axiosInstance.get('/Postulaciones/' + oferta + '/').then((response) => {
+                    setearRows(response.data)
+                  }).then(() => {
+                    toast.success('Postulante deseleccionado', { position: 'bottom-right' })
+                  })
                 })
-              }
-            }).catch((error) => {
-              console.log(error)
-              // si es un error 400 algo (400, 401, 403, 404, 405, 406, 415, 422) es porque el usuario ingreso mal los datos
-              if (error.response.status >= 400 && error.response.status < 500) {
-                if (error.response.data.detail) {
-                  toast.error(error.response.data.detail, { position: 'bottom-right' })
-                } else {
-                  toast.error('Error al seleccionar postulante', { position: 'bottom-right' })
-                }
-              } else {
-                toast.error('Error al seleccionar postulante', { position: 'bottom-right' })
-              }
-            })
+                .catch((error) => {
+                  console.log(error)
+                  if (error.response?.status >= 400 && error.response?.status < 500) {
+                    toast.error(error.response.data?.detail || 'Error al deseleccionar postulante', { position: 'bottom-right' })
+                  } else {
+                    toast.error('Error al deseleccionar postulante', { position: 'bottom-right' })
+                  }
+                })
+              return;
+            }
+
+            // Si no está seleccionado, abrir modal de confirmación
+            setPostulantePendiente(postulante)
+            setModalOpen(true)
           }
         }
       }
@@ -169,6 +225,17 @@ const Postulantes = () => {
           </NavLink>
         </div>
       </div>
+      
+      {/* Modal de confirmación */}
+      <ModalConfirmacion
+        isOpen={modalOpen}
+        onClose={handleCerrarModal}
+        onConfirm={handleConfirmarSeleccion}
+        nombrePostulante={postulantePendiente?.nombre_postulante || ''}
+        nombreModulo={nombreModulo}
+        isLoading={isLoading}
+      />
+      
       <ToastContainer />
     </div>
   )
