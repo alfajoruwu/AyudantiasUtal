@@ -10,6 +10,8 @@ from api.vistas.postulaciones_view import PostulacionesView
 from api.vistas.correoVistas import Correos
 from api.vistas.modulo_views import ModulosView
 from api.vistas.resoluciones_views import ResolucionesView
+from django.urls import path
+from api.vistas.test_view import hola_mundo
 
 router = routers.DefaultRouter()
 router.register(r"Datos", DatosView, basename="Datos")
@@ -25,4 +27,7 @@ router.register(r"Modulos", ModulosView, basename="Modulos")
 
 router.register(r"Resoluciones", ResolucionesView, basename="Resoluciones")
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("hola/", hola_mundo),
+]
+urlpatterns += router.urls

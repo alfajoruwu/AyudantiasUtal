@@ -8,7 +8,7 @@ import authService from '../../utils/authService'
 import { DataContext } from '../../Datos/DataContext'
 import VerifyCode from './VerifyCode'
 
-export default function Login (props) {
+export default function Login(props) {
   const { setUsuariofinal } = useContext(DataContext)
   const [authMode, setAuthMode] = useState('signin')
   const [run, setUsuario] = useState('')
@@ -17,6 +17,7 @@ export default function Login (props) {
   const [nombreCompleto, setNombreCompleto] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [registeredEmail, setRegisteredEmail] = useState('') // Estado para el correo registrado
+  const [smallVersionLabel] = useState('v2.0') // etiqueta sutil de versión
   const navigate = useNavigate()
 
   const changeAuthMode = () => {
@@ -58,8 +59,6 @@ export default function Login (props) {
     })
   }
 
- 
-
   const crearUsuario = (event) => {
     event.preventDefault()
 
@@ -71,8 +70,6 @@ export default function Login (props) {
       if (!email.endsWith('@utalca.cl') && !email.endsWith('@alumnos.utalca.cl')) {
         throw new Error('El correo electrónico debe ser de dominio @utalca.cl o @alumnos.utalca.cl')
       }
-
-     
 
       const data = {
         run,
@@ -128,6 +125,8 @@ export default function Login (props) {
     <div className='login-page'>
       <NavbarLogin />
       <div className='Auth-form-container'>
+        {/* etiqueta casi invisible para verificar despliegue */}
+        <span style={{ position: 'absolute', top: 2, right: 6, fontSize: '10px', opacity: 0.4 }}>{smallVersionLabel}</span>
         {authMode === 'signin'
           ? (
             <form className='Auth-form' onSubmit={logearUsuario}>
@@ -176,11 +175,11 @@ export default function Login (props) {
                 </p>
               </div>
             </form>
-            )
+          )
           : authMode === 'verificar'
             ? (
               <VerifyCode volver={volver} />
-              )
+            )
             : (
               <form className='Auth-form' onSubmit={crearUsuario}>
                 <div className='Auth-form-content'>
@@ -224,7 +223,7 @@ export default function Login (props) {
                     <input
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      
+
                       className='form-control mt-1'
                       placeholder='Correo electronico'
                     />
@@ -246,7 +245,7 @@ export default function Login (props) {
                   </div>
                 </div>
               </form>
-              )}
+            )}
       </div>
     </div>
   )
