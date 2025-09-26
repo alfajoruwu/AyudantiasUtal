@@ -40,14 +40,14 @@ export default function TablaSimplev2({ rows, titulos, onDropdownChange, onHoras
         <TableBody>
           {rows.map((row) => {
             let isFirstCell = true;
-            
+
             // Determinar si la fila debe tener color amarillo (proceso no asignado)
             const tieneProcesoNoAsignado = row.Proceso === 'No asignado';
             const rowStyle = tieneProcesoNoAsignado ? {
               backgroundColor: '#fff3cd', // Amarillo claro
               borderLeft: '4px solid #ffc107' // Borde amarillo más fuerte
             } : {};
-            
+
             return (
               <TableRow key={row.id} style={rowStyle}>
                 {Object.keys(row).map((key) => {
@@ -55,11 +55,13 @@ export default function TablaSimplev2({ rows, titulos, onDropdownChange, onHoras
 
                   if (key.startsWith('Boton')) {
                     const buttonProps = row[key];
-                    
-                    // Determinar el color del botón basado en el proceso
+
+                    // Determinar el color del botón
                     let buttonClass;
-                    if (tieneProcesoNoAsignado && buttonProps.titulo === 'Asignar proceso') {
-                      buttonClass = 'btn-warning'; // Botón amarillo para "Asignar proceso" cuando no hay proceso
+                    if (buttonProps.color === 'danger') {
+                      buttonClass = 'btn-danger';
+                    } else if (tieneProcesoNoAsignado && buttonProps.titulo === 'Asignar') {
+                      buttonClass = 'btn-warning'; // Botón amarillo para "Asignar" cuando no hay proceso
                     } else if (buttonProps.color === 'historial') {
                       buttonClass = 'azul-button';
                     } else if (buttonProps.color === 'activo') {
@@ -70,15 +72,25 @@ export default function TablaSimplev2({ rows, titulos, onDropdownChange, onHoras
 
                     return (
                       <TableCell key={key}>
-                        <button 
-                          className={`btn ${buttonClass}`} 
+                        <button
+                          className={`btn ${buttonClass}`}
                           onClick={() => buttonProps.funcion()}
-                          style={tieneProcesoNoAsignado && buttonProps.titulo === 'Asignar proceso' ? {
-                            fontWeight: 'bold',
-                            boxShadow: '0 2px 4px rgba(255, 193, 7, 0.3)'
-                          } : {}}
+                          disabled={buttonProps.disabled || false}
+                          style={{
+                            ...(tieneProcesoNoAsignado && buttonProps.titulo === 'Asignar' ? {
+                              fontWeight: 'bold',
+                              boxShadow: '0 2px 4px rgba(255, 193, 7, 0.3)'
+                            } : {}),
+                            ...(buttonProps.disabled ? {
+                              opacity: 0.5,
+                              cursor: 'not-allowed'
+                            } : {})
+                          }}
                         >
-                          {tieneProcesoNoAsignado ? buttonProps.titulo : buttonProps.titulo2 || buttonProps.titulo}
+                          {tieneProcesoNoAsignado && buttonProps.titulo === 'Asignar' ?
+                            buttonProps.titulo :
+                            (buttonProps.titulo2 || buttonProps.titulo)
+                          }
                         </button>
                       </TableCell>
                     );
@@ -143,14 +155,14 @@ export default function TablaSimplev2({ rows, titulos, onDropdownChange, onHoras
 
                   const cellClass = isFirstCell ? 'primero container justify-content-center align-items-center d-flex' : 'd-flex demas container justify-content-center align-items-center';
                   isFirstCell = false;
-                  
+
                   // Estilo especial para celdas con "No asignado"
                   const cellStyle = row[key] === 'No asignado' ? {
                     fontWeight: 'bold',
                     color: '#856404',
                     fontStyle: 'italic'
                   } : {};
-                  
+
                   return (
                     <TableCell key={key}>
                       <div className={cellClass} style={cellStyle}>{row[key]}</div>

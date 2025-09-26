@@ -21,7 +21,7 @@ const Resolucion = () => {
     const day = String(today.getDate()).padStart(2, '0')
     return `${year}-${month}-${day}`
   }
-  const titulos = ['Módulo', 'Nombre', 'RUN', 'N° Meses', 'Horas Mensuales', 'Pago Mensual', 'Proceso', 'Fecha de postulación']
+  const titulos = ['Módulo', 'Nombre', 'RUN', 'N° Meses', 'Horas Mensuales', 'Pago Mensual', 'Proceso', 'Fecha de postulación', 'Asignar', 'Des-asignar']
   const [loading, setLoading] = useState(false)
   const [rows, setRows] = useState([])
   const [showModal, setShowModal] = useState(false)
@@ -60,6 +60,8 @@ const Resolucion = () => {
       const resoluciones = res.data.map((row) => row.resolucion || 'No asignado')
       setResolucion(['Todos', ...new Set(resoluciones)])
       const rows = res.data.map((row) => {
+        const tieneProcesoAsignado = row.resolucion && row.resolucion !== 'No asignado'
+
         return {
           Módulo: row.modulo,
           Nombre: row.nombre_postulante,
@@ -70,11 +72,20 @@ const Resolucion = () => {
           Proceso: row.resolucion ? row.resolucion : 'No asignado',
           id: row.id_oferta,
           FechaPostulacion: row.fecha_postulacion,
-          BotonSeleccionarProceso: {
-            titulo: 'Asignar proceso',
-            titulo2: 'Cambiar proceso',
+          BotonAsignarProceso: {
+            titulo: 'Asignar',
+            titulo2: 'Cambiar',
             funcion: () => {
               asignarPeriodo(row.id_oferta)
+            }
+          },
+          BotonDesasignarProceso: {
+            titulo: 'Quitar',
+            titulo2: 'Quitar',
+            color: 'danger',
+            disabled: !tieneProcesoAsignado,
+            funcion: () => {
+              desasignarProceso(row.id_oferta)
             }
           }
         }
@@ -109,6 +120,8 @@ const Resolucion = () => {
             row.CantidadMes = proceso.n_meses
             row.PagoMensual = `$${proceso.precio * row.HorasMensuales}`
             row.Proceso = procesoSeleccionado
+            // Habilitar el botón de des-asignar
+            row.BotonDesasignarProceso.disabled = false
           }
           return row
         })
@@ -129,7 +142,51 @@ const Resolucion = () => {
     }
   }
 
+  const desasignarProceso = async (seleccionado) => {
+    const data = {
+      resolucion: null
+    }
+
+    try {
+      const response = await axiosInstance.patch('Ofertas/' + seleccionado + '/', data)
+      if (response.status === 200) {
+        toast.success('Proceso des-asignado exitosamente', { position: 'bottom-right' })
+        const rows = rowsRef.current
+        const newRows = rows.map((row) => {
+          if (row.id === seleccionado) {
+            row.CantidadMes = 'No asignado'
+            row.PagoMensual = 'No asignado'
+            row.Proceso = 'No asignado'
+            // Deshabilitar el botón de des-asignar
+            row.BotonDesasignarProceso.disabled = true
+          }
+          return row
+        })
+        setRows(newRows)
+      } else {
+        console.error('Error al des-asignar el proceso:', response)
+        toast.error('Error al des-asignar el proceso', { position: 'bottom-right' })
+      }
+    } catch (error) {
+      console.error('Error al des-asignar el proceso:', error)
+      if (error.response && error.response.status === 400) {
+        if (error.response.data) {
+          toast.error(error.response.data.detail, { position: 'bottom-right' })
+        }
+      } else {
+        toast.error('Error al des-asignar el proceso', { position: 'bottom-right' })
+      }
+    }
+  }
+
   const exportData = () => {
+    console.log('=== DEBUG EXPORTACIÓN ===')
+    console.log('Total rows:', rows.length)
+    console.log('Filtered rows:', filteredData.length)
+    console.log('FiltroResolucion actual:', filtroResolucion)
+    console.log('FechaInicio:', fechaInicio)
+    console.log('FechaFin:', fechaFin)
+    console.log('Primeros 3 registros filtrados:', filteredData.slice(0, 3))
     exportToExcel(filteredData, 'Datos resolucion.xlsx', 'Resolucion')
   }
 
@@ -208,7 +265,11 @@ const Resolucion = () => {
   }
 
   const filtros = {
-    resolucion: (row) => filtroResolucion === 'Todos' || row.Proceso === filtroResolucion,
+    resolucion: (row) => {
+      const resultado = filtroResolucion === 'Todos' || row.Proceso === filtroResolucion
+      // console.log(`Filtro resolución - Row: ${row.Proceso}, Filtro: ${filtroResolucion}, Resultado: ${resultado}`)
+      return resultado
+    },
     fechaSeleccionada: (row) => {
       if (!fechaInicio && !fechaFin) return true
       const itemFechaPostulacion = new Date(row.FechaPostulacion)
@@ -292,7 +353,7 @@ const Resolucion = () => {
         )}
 
         <div className='row mt-3'>
-          <Tabla titulos={titulos} rows={filteredData} mostrarBoton={false} />
+          <Tabla titulos={titulos} rows={filteredData} />
           {loading && <div className='spinner' />}
         </div>
         <Button className='btn color-btn' onClick={() => exportData()}>Exportar a Excel</Button>

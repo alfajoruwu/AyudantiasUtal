@@ -17,7 +17,7 @@ export default function Login(props) {
   const [nombreCompleto, setNombreCompleto] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [registeredEmail, setRegisteredEmail] = useState('') // Estado para el correo registrado
-  const [smallVersionLabel] = useState('v2.0') // etiqueta sutil de versión
+  const [smallVersionLabel] = useState('v2.0.1') // etiqueta sutil de versión
   const navigate = useNavigate()
 
   const changeAuthMode = () => {
